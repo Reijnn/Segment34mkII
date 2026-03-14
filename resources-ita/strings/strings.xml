@@ -141,11 +141,8 @@
     <string id="LABEL_PRESSURE">PRESSIONE:</string>
     <string id="LABEL_PRESSURE_1">PRES</string>
     <string id="LABEL_PRESSURE_2">PRESSIONE</string>
-    <string id="LABEL_PRESSURE_3">PRESSIONE:</string>
-    <string id="LABEL_PRESSURE_CHANGE">VAR PRES:</string>
     <string id="LABEL_PRESSURE_CHANGE_1">VAR</string>
     <string id="LABEL_PRESSURE_CHANGE_2">VAR PRES</string>
-    <string id="LABEL_PRESSURE_CHANGE_3">VAR PRES:</string>
     <string id="LABEL_KG_1">KG</string>
     <string id="LABEL_WEIGHT_2">PESO</string>
     <string id="LABEL_KG_3">PESO KG</string>

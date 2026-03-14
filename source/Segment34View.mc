@@ -2646,8 +2646,8 @@ class Segment34View extends WatchUi.WatchFace {
             case 74: return formatLabel(Rez.Strings.LABEL_FL, Rez.Strings.LABEL_FL, Rez.Strings.LABEL_FL_3, labelSize);
             case 75: return formatLabel(Rez.Strings.LABEL_HRS_NEXT_SUN_EVENT_1, Rez.Strings.LABEL_HRS_NEXT_SUN_EVENT_1, Rez.Strings.LABEL_HRS_NEXT_SUN_EVENT_3, labelSize);
             case 76: return formatLabel(Rez.Strings.LABEL_RHR_1, Rez.Strings.LABEL_RHR_2, Rez.Strings.LABEL_RHR_3, labelSize);
-            case 79: return formatLabel(Rez.Strings.LABEL_PRESSURE_1, Rez.Strings.LABEL_PRESSURE_2, Rez.Strings.LABEL_PRESSURE_3, labelSize);
-            case 80: return formatLabel(Rez.Strings.LABEL_PRESSURE_CHANGE_1, Rez.Strings.LABEL_PRESSURE_CHANGE_2, Rez.Strings.LABEL_PRESSURE_CHANGE_3, labelSize);
+            case 79: return formatLabel(Rez.Strings.LABEL_PRESSURE_1, Rez.Strings.LABEL_PRESSURE_2, Rez.Strings.LABEL_PRESSURE_2, labelSize);
+            case 80: return formatLabel(Rez.Strings.LABEL_PRESSURE_CHANGE_1, Rez.Strings.LABEL_PRESSURE_CHANGE_2, Rez.Strings.LABEL_PRESSURE_CHANGE_2, labelSize);
         }
 
         return "";

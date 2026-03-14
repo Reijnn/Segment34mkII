@@ -140,11 +140,8 @@
     <string id="LABEL_PRESSURE">PRESIÓN:</string>
     <string id="LABEL_PRESSURE_1">PRES</string>
     <string id="LABEL_PRESSURE_2">PRESIÓN</string>
-    <string id="LABEL_PRESSURE_3">PRESIÓN:</string>
-    <string id="LABEL_PRESSURE_CHANGE">CAM PRES:</string>
     <string id="LABEL_PRESSURE_CHANGE_1">CAM</string>
     <string id="LABEL_PRESSURE_CHANGE_2">CAM PRES</string>
-    <string id="LABEL_PRESSURE_CHANGE_3">CAM PRES:</string>
     <string id="LABEL_KG_1">KG</string>
     <string id="LABEL_WEIGHT_2">PESO</string>
     <string id="LABEL_KG_3">PESO KG</string>

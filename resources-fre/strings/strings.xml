@@ -141,11 +141,8 @@
     <string id="LABEL_PRESSURE">PRESSION:</string>
     <string id="LABEL_PRESSURE_1">PRES</string>
     <string id="LABEL_PRESSURE_2">PRESSION</string>
-    <string id="LABEL_PRESSURE_3">PRESSION:</string>
-    <string id="LABEL_PRESSURE_CHANGE">CHGT PRES:</string>
     <string id="LABEL_PRESSURE_CHANGE_1">CHGT</string>
     <string id="LABEL_PRESSURE_CHANGE_2">CHGT PRES</string>
-    <string id="LABEL_PRESSURE_CHANGE_3">CHGT PRES:</string>
     <string id="LABEL_KG_1">KG</string>
     <string id="LABEL_WEIGHT_2">POIDS</string>
     <string id="LABEL_KG_3">POIDS KG</string>

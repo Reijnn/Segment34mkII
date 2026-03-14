@@ -141,11 +141,8 @@
     <string id="LABEL_PRESSURE">DRUCK:</string>
     <string id="LABEL_PRESSURE_1">DRUCK</string>
     <string id="LABEL_PRESSURE_2">DRUCK</string>
-    <string id="LABEL_PRESSURE_3">DRUCK:</string>
-    <string id="LABEL_PRESSURE_CHANGE">DRUCK ÄND:</string>
     <string id="LABEL_PRESSURE_CHANGE_1">ÄND</string>
     <string id="LABEL_PRESSURE_CHANGE_2">DRUCK ÄND</string>
-    <string id="LABEL_PRESSURE_CHANGE_3">DRUCK ÄND:</string>
     <string id="LABEL_KG_1">KG</string>
     <string id="LABEL_WEIGHT_2">GEWICHT</string>
     <string id="LABEL_KG_3">GEWICHT KG</string>

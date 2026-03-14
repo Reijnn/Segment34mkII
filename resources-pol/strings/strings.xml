@@ -141,11 +141,8 @@
     <string id="LABEL_PRESSURE">CIŚNIENIE:</string>
     <string id="LABEL_PRESSURE_1">CIŚN</string>
     <string id="LABEL_PRESSURE_2">CIŚNIENIE</string>
-    <string id="LABEL_PRESSURE_3">CIŚNIENIE:</string>
-    <string id="LABEL_PRESSURE_CHANGE">ZM CIŚN:</string>
     <string id="LABEL_PRESSURE_CHANGE_1">ZM</string>
     <string id="LABEL_PRESSURE_CHANGE_2">ZM CIŚN</string>
-    <string id="LABEL_PRESSURE_CHANGE_3">ZM CIŚN:</string>
     <string id="LABEL_KG_1">KG</string>
     <string id="LABEL_WEIGHT_2">WAGA</string>
     <string id="LABEL_KG_3">WAGA KG</string>
