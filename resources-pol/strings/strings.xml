@@ -201,6 +201,7 @@
     <string id="LABEL_RHR_1">SPOCZ</string>
     <string id="LABEL_RHR_2">SPOCZ HR</string>
     <string id="LABEL_RHR_3">TĘTNO SPOCZ</string>
+    <string id="LABEL_COUNTDOWN">WYDARZENIE:</string>
 
     <string id="settings_color_theme" scope="settings">Motyw kolorystyczny</string>
     <string id="settings_yellow_on_turquoise" scope="settings">Żółty na turkusowym</string>
@@ -430,6 +431,11 @@
     <string id="settings_alternative_timezone_1_offset" scope="settings">Przesunięcie alternatywnej strefy czasowej 1</string>
     <string id="settings_alternative_timezone_2_label" scope="settings">Etykieta alternatywnej strefy czasowej 2</string>
     <string id="settings_alternative_timezone_2_offset" scope="settings">Przesunięcie alternatywnej strefy czasowej 2</string>
+    <string id="settings_countdown_name" scope="settings">Nazwa wydarzenia</string>
+    <string id="settings_countdown_year" scope="settings">Rok wydarzenia</string>
+    <string id="settings_countdown_month" scope="settings">Miesiąc wydarzenia</string>
+    <string id="settings_countdown_day" scope="settings">Dzień wydarzenia</string>
+    <string id="settings_countdown_field_label" scope="settings">Odliczanie do wydarzenia (dni)</string>
     <string id="settings_temperature_unit" scope="settings">Jednostka temperatury</string>
     <string id="settings_c" scope="settings">C</string>
     <string id="settings_f" scope="settings">F</string>

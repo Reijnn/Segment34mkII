@@ -201,6 +201,7 @@
     <string id="LABEL_RHR_1">RFC</string>
     <string id="LABEL_RHR_2">FC RIPO</string>
     <string id="LABEL_RHR_3">FC RIPOSO</string>
+    <string id="LABEL_COUNTDOWN">EVENTO:</string>
 
     <!-- Settings strings with scope="settings" -->
     <string id="settings_color_theme" scope="settings">Tema Colore</string>
@@ -431,6 +432,11 @@
     <string id="settings_alternative_timezone_1_offset" scope="settings">Offset fuso orario alternativo 1</string>
     <string id="settings_alternative_timezone_2_label" scope="settings">Etichetta fuso orario alternativo 2</string>
     <string id="settings_alternative_timezone_2_offset" scope="settings">Offset fuso orario alternativo 2</string>
+    <string id="settings_countdown_name" scope="settings">Nome evento</string>
+    <string id="settings_countdown_year" scope="settings">Anno evento</string>
+    <string id="settings_countdown_month" scope="settings">Mese evento</string>
+    <string id="settings_countdown_day" scope="settings">Giorno evento</string>
+    <string id="settings_countdown_field_label" scope="settings">Conto alla rovescia evento (giorni)</string>
     <string id="settings_temperature_unit" scope="settings">Unità temperatura</string>
     <string id="settings_c" scope="settings">C</string>
     <string id="settings_f" scope="settings">F</string>

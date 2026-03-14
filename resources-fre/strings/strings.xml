@@ -201,6 +201,7 @@
     <string id="LABEL_RHR_1">RFC</string>
     <string id="LABEL_RHR_2">FC REPO</string>
     <string id="LABEL_RHR_3">FC REPOS</string>
+    <string id="LABEL_COUNTDOWN">ÉVÉNEMENT :</string>
 
     <string id="settings_color_theme" scope="settings">Thème de couleur</string>
     <string id="settings_yellow_on_turquoise" scope="settings">Jaune sur turquoise</string>
@@ -430,6 +431,11 @@
     <string id="settings_alternative_timezone_1_offset" scope="settings">Décalage du fuseau horaire alternatif 1</string>
     <string id="settings_alternative_timezone_2_label" scope="settings">Libellé du fuseau horaire alternatif 2</string>
     <string id="settings_alternative_timezone_2_offset" scope="settings">Décalage du fuseau horaire alternatif 2</string>
+    <string id="settings_countdown_name" scope="settings">Nom de l'événement</string>
+    <string id="settings_countdown_year" scope="settings">Année de l'événement</string>
+    <string id="settings_countdown_month" scope="settings">Mois de l'événement</string>
+    <string id="settings_countdown_day" scope="settings">Jour de l'événement</string>
+    <string id="settings_countdown_field_label" scope="settings">Compte à rebours de l'événement (jours)</string>
     <string id="settings_temperature_unit" scope="settings">Unité de température</string>
     <string id="settings_c" scope="settings">C</string>
     <string id="settings_f" scope="settings">F</string>

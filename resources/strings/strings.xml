@@ -201,6 +201,7 @@
     <string id="LABEL_RHR_1">RHR</string>
     <string id="LABEL_RHR_2">REST HR</string>
     <string id="LABEL_RHR_3">RESTING HR</string>
+    <string id="LABEL_COUNTDOWN">EVENT:</string>
 
     <!-- Settings strings with scope="settings" -->
     <string id="settings_color_theme" scope="settings">Color Theme</string>
@@ -441,6 +442,11 @@
     <string id="settings_alternative_timezone_1_offset" scope="settings">Alternative Timezone 1 offset</string>
     <string id="settings_alternative_timezone_2_label" scope="settings">Alternative Timezone 2 label</string>
     <string id="settings_alternative_timezone_2_offset" scope="settings">Alternative Timezone 2 offset</string>
+    <string id="settings_countdown_name" scope="settings">Event Name</string>
+    <string id="settings_countdown_year" scope="settings">Event Year</string>
+    <string id="settings_countdown_month" scope="settings">Event Month</string>
+    <string id="settings_countdown_day" scope="settings">Event Day</string>
+    <string id="settings_countdown_field_label" scope="settings">Event Countdown (days)</string>
     <string id="settings_temperature_unit" scope="settings">Temperature unit</string>
     <string id="settings_show_temp_unit" scope="settings">Show temperature unit</string>
     <string id="settings_c" scope="settings">C</string>

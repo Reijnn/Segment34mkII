@@ -51,6 +51,10 @@
     <property id="tzOffset2" type="number">0</property>
     <property id="tzName1" type="string">UTC TIME</property>
     <property id="tzName2" type="string">TZ2</property>
+    <property id="countdownName" type="string">EVENT</property>
+    <property id="countdownYear" type="number">2027</property>
+    <property id="countdownMonth" type="number">1</property>
+    <property id="countdownDay" type="number">1</property>
     <property id="icon1" type="number">1</property>
     <property id="icon2" type="number">2</property>
     <property id="weekOffset" type="number">0</property>

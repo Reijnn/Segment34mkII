@@ -200,6 +200,7 @@
     <string id="LABEL_RHR_1">FCC</string>
     <string id="LABEL_RHR_2">FC REP</string>
     <string id="LABEL_RHR_3">FC REPOSO</string>
+    <string id="LABEL_COUNTDOWN">EVENTO:</string>
 
     <!-- Settings strings with scope="settings" -->
     <string id="settings_color_theme" scope="settings">Tema Colores</string>
@@ -430,6 +431,11 @@
     <string id="settings_alternative_timezone_1_offset" scope="settings">Offset huso horario alternativo 1</string>
     <string id="settings_alternative_timezone_2_label" scope="settings">Etiqueta huso horario alternativo 2</string>
     <string id="settings_alternative_timezone_2_offset" scope="settings">Offset huso horario alternativo 2</string>
+    <string id="settings_countdown_name" scope="settings">Nombre del evento</string>
+    <string id="settings_countdown_year" scope="settings">Año del evento</string>
+    <string id="settings_countdown_month" scope="settings">Mes del evento</string>
+    <string id="settings_countdown_day" scope="settings">Día del evento</string>
+    <string id="settings_countdown_field_label" scope="settings">Cuenta atrás del evento (días)</string>
     <string id="settings_temperature_unit" scope="settings">Unidad de temperatura</string>
     <string id="settings_c" scope="settings">C</string>
     <string id="settings_f" scope="settings">F</string>

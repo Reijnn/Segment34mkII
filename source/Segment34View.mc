@@ -150,6 +150,10 @@ class Segment34View extends WatchUi.WatchFace {
     hidden var propTzOffset2 as Number = 0;
     hidden var propTzName1 as String = "";
     hidden var propTzName2 as String = "";
+    hidden var propCountdownName as String = "EVENT";
+    hidden var propCountdownYear as Number = 2027;
+    hidden var propCountdownMonth as Number = 1;
+    hidden var propCountdownDay as Number = 1;
     hidden var propWeekOffset as Number = 0;
     hidden var propLabelVisibility as Number = 0;
     hidden var propSmallFontVariant as Number = 0;
@@ -1466,6 +1470,19 @@ class Segment34View extends WatchUi.WatchFace {
         }
     }
 
+    hidden function isValidDate(year as Number, month as Number, day as Number) as Boolean {
+        if(month < 1 || month > 12 || day < 1) {
+            return false;
+        }
+        var daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        var maxDay = daysInMonth[month - 1];
+        // February gets 29 days in leap years
+        if(month == 2 && isLeapYear(year)) {
+            maxDay = 29;
+        }
+        return day <= maxDay;
+    }
+
     hidden function updateProperties() as Void {
         propTheme = getValueOrDefault("colorTheme", 0) as Number;
         propNightTheme = getValueOrDefault("nightColorTheme", -1) as Number;
@@ -1523,6 +1540,10 @@ class Segment34View extends WatchUi.WatchFace {
         propTzOffset2 = getValueOrDefault("tzOffset2", 0) as Number;
         propTzName1 = getValueOrDefault("tzName1", "UTC TIME") as String;
         propTzName2 = getValueOrDefault("tzName2", "TZ2") as String;
+        propCountdownName = getValueOrDefault("countdownName", "EVENT") as String;
+        propCountdownYear = getValueOrDefault("countdownYear", 2027) as Number;
+        propCountdownMonth = getValueOrDefault("countdownMonth", 1) as Number;
+        propCountdownDay = getValueOrDefault("countdownDay", 1) as Number;
         propWeekOffset = getValueOrDefault("weekOffset", 0) as Number;
         propSmallFontVariant = getValueOrDefault("smallFontVariant", 2) as Number;
         propIs24H = System.getDeviceSettings().is24Hour;
@@ -2489,6 +2510,19 @@ class Segment34View extends WatchUi.WatchFace {
             }
             var distFactor = isMetricDistance() ? 0.001 : 0.000621371;
             val = formatDistanceByWidth((complicationType == 77 ? cachedRunDist7Days : cachedBikeDist7Days) * distFactor, width);
+        } else if(complicationType == 81) { // Event Countdown (days)
+            if(isValidDate(propCountdownYear, propCountdownMonth, propCountdownDay)) {
+                var targetMoment = Gregorian.moment({
+                    :year => propCountdownYear,
+                    :month => propCountdownMonth,
+                    :day => propCountdownDay,
+                    :hour => 0, :minute => 0, :second => 0
+                });
+                var daysRemaining = (targetMoment.value() - Time.now().value()) / 86400;
+                val = (daysRemaining < 0 ? 0 : daysRemaining).format("%d");
+            } else {
+                val = "--";
+            }
         }
 
         return val;
@@ -2579,7 +2613,11 @@ class Segment34View extends WatchUi.WatchFace {
         if(complicationType == 41) {
             return propTzName2.toUpper() + ":";
         }
-        
+
+        if(complicationType == 81) {
+            return propCountdownName.toUpper() + ":";
+        }
+
         switch(complicationType) {
             case 0: return formatLabel(Rez.Strings.LABEL_WMIN_1, Rez.Strings.LABEL_WMIN_2, Rez.Strings.LABEL_WMIN_3, labelSize);
             case 1: return formatLabel(Rez.Strings.LABEL_DMIN_1, Rez.Strings.LABEL_DMIN_2, Rez.Strings.LABEL_DMIN_3, labelSize);

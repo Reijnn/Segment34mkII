@@ -171,6 +171,7 @@
             <listEntry value="57">@Strings.settings_next_calendar_event</listEntry>
             <listEntry value="71">@Strings.settings_cgm_glucose_trend</listEntry>
             <listEntry value="72">@Strings.settings_cgm_age</listEntry>
+            <listEntry value="81">@Strings.settings_countdown_field_label</listEntry>
         </settingConfig>
     </setting>
 
@@ -229,6 +230,7 @@
             <listEntry value="57">@Strings.settings_next_calendar_event</listEntry>
             <listEntry value="71">@Strings.settings_cgm_glucose_trend</listEntry>
             <listEntry value="72">@Strings.settings_cgm_age</listEntry>
+            <listEntry value="81">@Strings.settings_countdown_field_label</listEntry>
         </settingConfig>
     </setting>
 
@@ -458,6 +460,7 @@
             <listEntry value="57">@Strings.settings_next_calendar_event</listEntry>
             <listEntry value="71">@Strings.settings_cgm_glucose_trend</listEntry>
             <listEntry value="72">@Strings.settings_cgm_age</listEntry>
+            <listEntry value="81">@Strings.settings_countdown_field_label</listEntry>
         </settingConfig>
     </setting>
 
@@ -516,6 +519,7 @@
             <listEntry value="57">@Strings.settings_next_calendar_event</listEntry>
             <listEntry value="71">@Strings.settings_cgm_glucose_trend</listEntry>
             <listEntry value="72">@Strings.settings_cgm_age</listEntry>
+            <listEntry value="81">@Strings.settings_countdown_field_label</listEntry>
         </settingConfig>
     </setting>
 
@@ -574,6 +578,7 @@
             <listEntry value="57">@Strings.settings_next_calendar_event</listEntry>
             <listEntry value="71">@Strings.settings_cgm_glucose_trend</listEntry>
             <listEntry value="72">@Strings.settings_cgm_age</listEntry>
+            <listEntry value="81">@Strings.settings_countdown_field_label</listEntry>
         </settingConfig>
     </setting>
 
@@ -632,6 +637,7 @@
             <listEntry value="57">@Strings.settings_next_calendar_event</listEntry>
             <listEntry value="71">@Strings.settings_cgm_glucose_trend</listEntry>
             <listEntry value="72">@Strings.settings_cgm_age</listEntry>
+            <listEntry value="81">@Strings.settings_countdown_field_label</listEntry>
         </settingConfig>
     </setting>
 
@@ -690,6 +696,7 @@
             <listEntry value="62">@Strings.settings_current_location_accuracy</listEntry>
             <listEntry value="57">@Strings.settings_next_calendar_event_time</listEntry>
             <listEntry value="71">@Strings.settings_cgm_glucose_trend</listEntry>
+            <listEntry value="81">@Strings.settings_countdown_field_label</listEntry>
         </settingConfig>
     </setting>
 
@@ -1128,6 +1135,84 @@
             <listEntry value="765">UTC+12:45</listEntry>
             <listEntry value="780">UTC+13:00</listEntry>
             <listEntry value="840">UTC+14:00</listEntry>
+        </settingConfig>
+    </setting>
+
+    <setting propertyKey="@Properties.countdownName" title="@Strings.settings_countdown_name">
+        <settingConfig type="alphaNumeric" />
+    </setting>
+
+    <setting propertyKey="@Properties.countdownYear" title="@Strings.settings_countdown_year">
+        <settingConfig type="list">
+            <listEntry value="2025">2025</listEntry>
+            <listEntry value="2026">2026</listEntry>
+            <listEntry value="2027">2027</listEntry>
+            <listEntry value="2028">2028</listEntry>
+            <listEntry value="2029">2029</listEntry>
+            <listEntry value="2030">2030</listEntry>
+            <listEntry value="2031">2031</listEntry>
+            <listEntry value="2032">2032</listEntry>
+            <listEntry value="2033">2033</listEntry>
+            <listEntry value="2034">2034</listEntry>
+            <listEntry value="2035">2035</listEntry>
+            <listEntry value="2036">2036</listEntry>
+            <listEntry value="2037">2037</listEntry>
+            <listEntry value="2038">2038</listEntry>
+            <listEntry value="2039">2039</listEntry>
+            <listEntry value="2040">2040</listEntry>
+        </settingConfig>
+    </setting>
+
+    <setting propertyKey="@Properties.countdownMonth" title="@Strings.settings_countdown_month">
+        <settingConfig type="list">
+            <listEntry value="1">January</listEntry>
+            <listEntry value="2">February</listEntry>
+            <listEntry value="3">March</listEntry>
+            <listEntry value="4">April</listEntry>
+            <listEntry value="5">May</listEntry>
+            <listEntry value="6">June</listEntry>
+            <listEntry value="7">July</listEntry>
+            <listEntry value="8">August</listEntry>
+            <listEntry value="9">September</listEntry>
+            <listEntry value="10">October</listEntry>
+            <listEntry value="11">November</listEntry>
+            <listEntry value="12">December</listEntry>
+        </settingConfig>
+    </setting>
+
+    <setting propertyKey="@Properties.countdownDay" title="@Strings.settings_countdown_day">
+        <settingConfig type="list">
+            <listEntry value="1">1</listEntry>
+            <listEntry value="2">2</listEntry>
+            <listEntry value="3">3</listEntry>
+            <listEntry value="4">4</listEntry>
+            <listEntry value="5">5</listEntry>
+            <listEntry value="6">6</listEntry>
+            <listEntry value="7">7</listEntry>
+            <listEntry value="8">8</listEntry>
+            <listEntry value="9">9</listEntry>
+            <listEntry value="10">10</listEntry>
+            <listEntry value="11">11</listEntry>
+            <listEntry value="12">12</listEntry>
+            <listEntry value="13">13</listEntry>
+            <listEntry value="14">14</listEntry>
+            <listEntry value="15">15</listEntry>
+            <listEntry value="16">16</listEntry>
+            <listEntry value="17">17</listEntry>
+            <listEntry value="18">18</listEntry>
+            <listEntry value="19">19</listEntry>
+            <listEntry value="20">20</listEntry>
+            <listEntry value="21">21</listEntry>
+            <listEntry value="22">22</listEntry>
+            <listEntry value="23">23</listEntry>
+            <listEntry value="24">24</listEntry>
+            <listEntry value="25">25</listEntry>
+            <listEntry value="26">26</listEntry>
+            <listEntry value="27">27</listEntry>
+            <listEntry value="28">28</listEntry>
+            <listEntry value="29">29</listEntry>
+            <listEntry value="30">30</listEntry>
+            <listEntry value="31">31</listEntry>
         </settingConfig>
     </setting>
 
