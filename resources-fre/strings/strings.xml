@@ -139,6 +139,13 @@
     <string id="LABEL_WBIKEMI_3">MI VÉLO SEM</string>
     <string id="LABEL_TRAINING">ENTRAIN.:</string>
     <string id="LABEL_PRESSURE">PRESSION:</string>
+    <string id="LABEL_PRESSURE_1">PRES</string>
+    <string id="LABEL_PRESSURE_2">PRESSION</string>
+    <string id="LABEL_PRESSURE_3">PRESSION:</string>
+    <string id="LABEL_PRESSURE_CHANGE">CHGT PRES:</string>
+    <string id="LABEL_PRESSURE_CHANGE_1">CHGT</string>
+    <string id="LABEL_PRESSURE_CHANGE_2">CHGT PRES</string>
+    <string id="LABEL_PRESSURE_CHANGE_3">CHGT PRES:</string>
     <string id="LABEL_KG_1">KG</string>
     <string id="LABEL_WEIGHT_2">POIDS</string>
     <string id="LABEL_KG_3">POIDS KG</string>
@@ -285,6 +292,8 @@
     <string id="settings_alternative_timezone_2" scope="settings">Fuseau horaire alternatif 2</string>
     <string id="settings_barometric_pressure_raw" scope="settings">Pression barométrique, brute</string>
     <string id="settings_barometric_pressure_sea" scope="settings">Pression barométrique, niveau mer</string>
+    <string id="settings_pressure_trend" scope="settings">Tendance pression (RISE/FALL/STDY)</string>
+    <string id="settings_pressure_change" scope="settings">Variation pression (±valeur, 3h)</string>
     <string id="settings_weight_kg" scope="settings">Poids (kg)</string>
     <string id="settings_weight_lbs" scope="settings">Poids (lbs)</string>
     <string id="settings_week_number" scope="settings">Numéro de semaine</string>

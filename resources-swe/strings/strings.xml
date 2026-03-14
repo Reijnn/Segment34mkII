@@ -139,6 +139,13 @@
     <string id="LABEL_WBIKEMI_3">V CYKEL MI</string>
     <string id="LABEL_TRAINING">TRÄNING:</string>
     <string id="LABEL_PRESSURE">TRYCK:</string>
+    <string id="LABEL_PRESSURE_1">TRYCK</string>
+    <string id="LABEL_PRESSURE_2">TRYCK</string>
+    <string id="LABEL_PRESSURE_3">TRYCK:</string>
+    <string id="LABEL_PRESSURE_CHANGE">TRYCK ÄND:</string>
+    <string id="LABEL_PRESSURE_CHANGE_1">ÄND</string>
+    <string id="LABEL_PRESSURE_CHANGE_2">TRYCK ÄND</string>
+    <string id="LABEL_PRESSURE_CHANGE_3">TRYCK ÄND:</string>
     <string id="LABEL_KG_1">KG</string>
     <string id="LABEL_WEIGHT_2">VIKT</string>
     <string id="LABEL_KG_3">VIKT KG</string>
@@ -287,6 +294,8 @@
     <string id="settings_alternative_timezone_2" scope="settings">Alternativ tidszon 2</string>
     <string id="settings_barometric_pressure_raw" scope="settings">Barometriskt tryck, rå</string>
     <string id="settings_barometric_pressure_sea" scope="settings">Barometriskt tryck, havsnivå</string>
+    <string id="settings_pressure_trend" scope="settings">Trycktrent (RISE/FALL/STDY)</string>
+    <string id="settings_pressure_change" scope="settings">Trycksförändring (±värde, 3h)</string>
     <string id="settings_weight_kg" scope="settings">Vikt (kg)</string>
     <string id="settings_weight_lbs" scope="settings">Vikt (lbs)</string>
     <string id="settings_week_number" scope="settings">Veckonummer</string>

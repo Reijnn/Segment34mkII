@@ -80,6 +80,7 @@ class Segment34View extends WatchUi.WatchFace {
     hidden var lastSlowUpdate as Number? = null;
     hidden var cachedValues as Dictionary = {};
     hidden var cachedTempUnit as String = "C";
+    hidden var cachedPressureTrend as Dictionary or Null = null; // {:data => Dictionary, :timestamp => Number}
 
     hidden var isWeatherRequired as Boolean = false;
     (:WeatherCache) hidden var lastHfTime as Number? = null;
@@ -2485,6 +2486,8 @@ class Segment34View extends WatchUi.WatchFace {
         } else if(complicationType == 78) { // Bike distance past 7 days
             var factor78 = isMetricDistance() ? 0.001 : 0.000621371;
             val = formatDistanceByWidth(getActivityDistancePast7Days(Activity.SPORT_CYCLING) * factor78, width);
+        } else if (complicationType == 79 || complicationType == 80) { // Pressure trend/change
+            val = getPressureTrendValue(complicationType, width);
         }
 
         return val;
@@ -2643,6 +2646,8 @@ class Segment34View extends WatchUi.WatchFace {
             case 74: return formatLabel(Rez.Strings.LABEL_FL, Rez.Strings.LABEL_FL, Rez.Strings.LABEL_FL_3, labelSize);
             case 75: return formatLabel(Rez.Strings.LABEL_HRS_NEXT_SUN_EVENT_1, Rez.Strings.LABEL_HRS_NEXT_SUN_EVENT_1, Rez.Strings.LABEL_HRS_NEXT_SUN_EVENT_3, labelSize);
             case 76: return formatLabel(Rez.Strings.LABEL_RHR_1, Rez.Strings.LABEL_RHR_2, Rez.Strings.LABEL_RHR_3, labelSize);
+            case 79: return formatLabel(Rez.Strings.LABEL_PRESSURE_1, Rez.Strings.LABEL_PRESSURE_2, Rez.Strings.LABEL_PRESSURE_3, labelSize);
+            case 80: return formatLabel(Rez.Strings.LABEL_PRESSURE_CHANGE_1, Rez.Strings.LABEL_PRESSURE_CHANGE_2, Rez.Strings.LABEL_PRESSURE_CHANGE_3, labelSize);
         }
 
         return "";
@@ -2721,22 +2726,15 @@ class Segment34View extends WatchUi.WatchFace {
     }
 
     hidden function formatPressure(pressureHpa as Float, width as Number) as String {
-        var val = "";
         var nf = "%d";
-
         if (propPressureUnit == 0) { // hPA
-            val = pressureHpa.format(nf);
+            return pressureHpa.format(nf);
         } else if (propPressureUnit == 1) { // mmHG
-            val = (pressureHpa * 0.750062).format(nf);
+            return (pressureHpa * 0.750062).format(nf);
         } else if (propPressureUnit == 2) { // inHG
-            if(width == 5) {
-                val = (pressureHpa * 0.02953).format("%.2f");
-            } else {
-                val = (pressureHpa * 0.02953).format("%.1f");
-            }
+            return (pressureHpa * 0.02953).format(width >= 4 ? "%.2f" : "%.1f");
         }
-
-        return val;
+        return "";
     }
 
     hidden function moonPhase(time) as String {
@@ -2974,6 +2972,81 @@ class Segment34View extends WatchUi.WatchFace {
             ret = weatherCondition.precipitationChance.format("%d") + "%";
         }
         return ret;
+    }
+
+    hidden function getPressureTrendValue(complicationType as Number, width as Number) as String {
+        var trendData = getPressureTrendData(10800); // 3-hour lookback
+        if (trendData != null) {
+            var delta = trendData[:delta] as Float;
+            if (complicationType == 79) { // Pressure trend text
+                if (width < 4) {
+                    // Use arrow icons for small widths (icon font characters)
+                    return delta > 1.0 ? "b" : delta < -1.0 ? "d" : "c";  // Rising, Falling, Neutral
+                } else {
+                    // Use text for wider fields
+                    return delta > 1.0 ? "RISE" : delta < -1.0 ? "FALL" : "STDY";
+                }
+            } else { // complicationType == 80: Pressure change delta
+                return formatPressureDelta(delta, width);
+            }
+        }
+        return Application.loadResource(Rez.Strings.LABEL_NA);
+    }
+
+    hidden function formatPressureDelta(deltaHpa as Float, width as Number) as String {
+        var sign = (deltaHpa >= 0.0) ? "+" : "";
+        if (propPressureUnit == 1) { // mmHG
+            return sign + (deltaHpa * 0.750062).format("%d");
+        } else if (propPressureUnit == 2) { // inHG
+            return sign + (deltaHpa * 0.02953).format(width >= 4 ? "%.2f" : "%.1f");
+        } else { // hPa (default)
+            return sign + deltaHpa.format("%d");
+        }
+    }
+
+    hidden function getPressureTrendData(lookbackSeconds as Number) as Dictionary or Null {
+        var now = Time.now().value();
+        // Check cache (1800 seconds = 30 minutes for slow-changing sensor data)
+        if (cachedPressureTrend != null) {
+            var timestamp = cachedPressureTrend[:timestamp] as Number;
+            if ((now - timestamp) < 1800) {
+                return cachedPressureTrend[:data] as Dictionary;
+            }
+        }
+
+        if (!(Toybox has :SensorHistory) || !(Toybox.SensorHistory has :getPressureHistory)) {
+            return null;
+        }
+
+        var period = new Time.Duration(lookbackSeconds);
+        var iter = Toybox.SensorHistory.getPressureHistory({
+            :period => period,
+            :order => Toybox.SensorHistory.ORDER_OLDEST_FIRST
+        });
+        if (iter == null) { return null; }
+
+        var oldest = iter.next();
+        if (oldest == null || oldest.data == null) { return null; }
+
+        var newest = oldest;
+        var sample = iter.next();
+        while (sample != null) {
+            if (sample.data != null) {
+                newest = sample;
+            }
+            sample = iter.next();
+        }
+
+        if (oldest == newest) { return null; } // insufficient history
+
+        var result = {
+            :delta => (newest.data - oldest.data) / 100.0 // Pa → hPa
+        };
+        cachedPressureTrend = {
+            :data => result,
+            :timestamp => now
+        };
+        return result;
     }
 
     hidden function hoursToNextSunEvent() as String {

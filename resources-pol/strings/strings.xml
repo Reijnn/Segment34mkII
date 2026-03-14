@@ -139,6 +139,13 @@
     <string id="LABEL_WBIKEMI_3">ROWER MI TYG</string>
     <string id="LABEL_TRAINING">TRENING:</string>
     <string id="LABEL_PRESSURE">CIŚNIENIE:</string>
+    <string id="LABEL_PRESSURE_1">CIŚN</string>
+    <string id="LABEL_PRESSURE_2">CIŚNIENIE</string>
+    <string id="LABEL_PRESSURE_3">CIŚNIENIE:</string>
+    <string id="LABEL_PRESSURE_CHANGE">ZM CIŚN:</string>
+    <string id="LABEL_PRESSURE_CHANGE_1">ZM</string>
+    <string id="LABEL_PRESSURE_CHANGE_2">ZM CIŚN</string>
+    <string id="LABEL_PRESSURE_CHANGE_3">ZM CIŚN:</string>
     <string id="LABEL_KG_1">KG</string>
     <string id="LABEL_WEIGHT_2">WAGA</string>
     <string id="LABEL_KG_3">WAGA KG</string>
@@ -285,6 +292,8 @@
     <string id="settings_alternative_timezone_2" scope="settings">Alternatywna strefa czasowa 2</string>
     <string id="settings_barometric_pressure_raw" scope="settings">Ciśnienie barometryczne, surowe</string>
     <string id="settings_barometric_pressure_sea" scope="settings">Ciśnienie barometryczne, poziom morza</string>
+    <string id="settings_pressure_trend" scope="settings">Trend ciśnienia (RISE/FALL/STDY)</string>
+    <string id="settings_pressure_change" scope="settings">Zmiana ciśnienia (±wartość, 3h)</string>
     <string id="settings_weight_kg" scope="settings">Waga (kg)</string>
     <string id="settings_weight_lbs" scope="settings">Waga (funt)</string>
     <string id="settings_week_number" scope="settings">Numer tygodnia</string>

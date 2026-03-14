@@ -138,6 +138,13 @@
     <string id="LABEL_WBIKEMI_3">MI BICI SEM</string>
     <string id="LABEL_TRAINING">ENTRENAMIENTO:</string>
     <string id="LABEL_PRESSURE">PRESIÓN:</string>
+    <string id="LABEL_PRESSURE_1">PRES</string>
+    <string id="LABEL_PRESSURE_2">PRESIÓN</string>
+    <string id="LABEL_PRESSURE_3">PRESIÓN:</string>
+    <string id="LABEL_PRESSURE_CHANGE">CAM PRES:</string>
+    <string id="LABEL_PRESSURE_CHANGE_1">CAM</string>
+    <string id="LABEL_PRESSURE_CHANGE_2">CAM PRES</string>
+    <string id="LABEL_PRESSURE_CHANGE_3">CAM PRES:</string>
     <string id="LABEL_KG_1">KG</string>
     <string id="LABEL_WEIGHT_2">PESO</string>
     <string id="LABEL_KG_3">PESO KG</string>
@@ -285,6 +292,8 @@
     <string id="settings_alternative_timezone_2" scope="settings">Huso horario alternativo 2</string>
     <string id="settings_barometric_pressure_raw" scope="settings">Presión barométrica bruta</string>
     <string id="settings_barometric_pressure_sea" scope="settings">Presión barométrica, nivel del mar</string>
+    <string id="settings_pressure_trend" scope="settings">Tendencia de presión (RISE/FALL/STDY)</string>
+    <string id="settings_pressure_change" scope="settings">Cambio de presión (±valor, 3h)</string>
     <string id="settings_weight_kg" scope="settings">Peso (kg)</string>
     <string id="settings_weight_lbs" scope="settings">Peso (libras)</string>
     <string id="settings_week_number" scope="settings">Número de semana</string>

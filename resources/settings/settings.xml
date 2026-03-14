@@ -438,6 +438,8 @@
             <listEntry value="41">@Strings.settings_alternative_timezone_2</listEntry>
             <listEntry value="26">@Strings.settings_barometric_pressure_raw</listEntry>
             <listEntry value="30">@Strings.settings_barometric_pressure_sea</listEntry>
+            <listEntry value="79">@Strings.settings_pressure_trend</listEntry>
+            <listEntry value="80">@Strings.settings_pressure_change</listEntry>
             <listEntry value="27">@Strings.settings_weight_kg</listEntry>
             <listEntry value="28">@Strings.settings_weight_lbs</listEntry>
             <listEntry value="31">@Strings.settings_week_number</listEntry>
@@ -496,6 +498,7 @@
             <listEntry value="41">@Strings.settings_alternative_timezone_2</listEntry>
             <listEntry value="26">@Strings.settings_barometric_pressure_raw</listEntry>
             <listEntry value="30">@Strings.settings_barometric_pressure_sea</listEntry>
+            <listEntry value="80">@Strings.settings_pressure_change</listEntry>
             <listEntry value="27">@Strings.settings_weight_kg</listEntry>
             <listEntry value="28">@Strings.settings_weight_lbs</listEntry>
             <listEntry value="31">@Strings.settings_week_number</listEntry>
@@ -554,6 +557,8 @@
             <listEntry value="41">@Strings.settings_alternative_timezone_2</listEntry>
             <listEntry value="26">@Strings.settings_barometric_pressure_raw</listEntry>
             <listEntry value="30">@Strings.settings_barometric_pressure_sea</listEntry>
+            <listEntry value="79">@Strings.settings_pressure_trend</listEntry>
+            <listEntry value="80">@Strings.settings_pressure_change</listEntry>
             <listEntry value="27">@Strings.settings_weight_kg</listEntry>
             <listEntry value="28">@Strings.settings_weight_lbs</listEntry>
             <listEntry value="31">@Strings.settings_week_number</listEntry>
