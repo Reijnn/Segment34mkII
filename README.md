@@ -52,13 +52,27 @@ For refactorings and optimizations keep in mind that:
 - Notifications as icon
 - 7 day rolling run distance
 - Line font for bottom fields
-- AM/PM indicator
 - clock font without segments
 - separate 24h mode for alt tz
 - Configurable data for the notification field, week number and other short info could work
 - Second custom theme for easy switching
 
 ## Change log
+2026-03-20 v4.6.2
+- Changed default for AM/PM
+
+2026-03-20 v4.6.1
+- Fixed issue with settings not saving on some devices
+
+2026-03-17 v4.6.0
+- AM/PM display (to dissable set Separator between hours and minuts to ":")
+- Option to just show the outline for the clock
+- Fixed outline missalignment on digit 9, thanks Alvin for the report
+- Adjusted cache for "per 7 day" data to refresh after 5min instead of 1h
+
+2026-03-14 v4.5.1
+- Fixed issue with run / bike distance past 7 days
+
 2026-03-05 v4.5.0
 - Built with the latest Garmin SDK
 - New option for run / bike distance past 7 days (rolling)
