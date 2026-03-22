@@ -41,7 +41,7 @@ class Segment34View extends WatchUi.WatchFace {
     hidden var histogramHeight as Number = 20;
     hidden var histogramTargetWidth as Number = 40;
 
-    hidden var fontMoon as WatchUi.FontResource;
+    hidden var fontMoon as WatchUi.FontResource?;
     hidden var fontIcons as WatchUi.FontResource;
     hidden var fontClock as WatchUi.FontResource?;
     hidden var fontClockOutline as WatchUi.FontResource?;
@@ -52,8 +52,10 @@ class Segment34View extends WatchUi.WatchFace {
     hidden var fontAODData as WatchUi.FontResource?;
     hidden var fontBottomData as WatchUi.FontResource?;
     hidden var fontBattery as WatchUi.FontResource?;
-    hidden var weekNames as Array<String>?;
-    hidden var monthNames as Array<String>?;
+    hidden var cachedDayOfWeek as Number = -1;
+    hidden var cachedDayName as String = "";
+    hidden var cachedMonth as Number = -1;
+    hidden var cachedMonthName as String = "";
 
     // Layout Caching
     hidden var fieldXCoords as Array<Number> = [0, 0, 0, 0];
@@ -85,7 +87,6 @@ class Segment34View extends WatchUi.WatchFace {
     hidden var lastActivityDistUpdate as Number = 0;
     hidden var cachedPressureTrend as Dictionary or Null = null; // {:data => Dictionary, :timestamp => Number}
 
-    hidden var isWeatherRequired as Boolean = false;
     (:WeatherCache) hidden var lastHfTime as Number? = null;
     (:WeatherCache) hidden var lastCcHash as Number? = null;
     hidden var isLowMem as Boolean = false;
@@ -93,9 +94,9 @@ class Segment34View extends WatchUi.WatchFace {
     hidden var doesPartialUpdate as Boolean = false;
     hidden var hasComplications as Boolean = false;
 
-    // CGM Connect Widget complication IDs
-    hidden var cgmComplicationId as Complications.Id? = null;
-    hidden var cgmAgeComplicationId as Complications.Id? = null;
+    // CGM Connect Widget complication IDs (only on devices that support Complications API)
+    (:HighMem) hidden var cgmComplicationId as Complications.Id? = null;
+    (:HighMem) hidden var cgmAgeComplicationId as Complications.Id? = null;
     
     hidden var propIs24H as Boolean = false;
     hidden var propTheme as Integer = 0;
@@ -137,6 +138,7 @@ class Segment34View extends WatchUi.WatchFace {
     hidden var propTempUnit as Number = 0;
     hidden var propShowTempUnit as Boolean = true;
     hidden var propDistanceUnit as Number = 0;
+    hidden var propIsMetricDistance as Boolean = true;
     hidden var propWindUnit as Number = 0;
     hidden var propPressureUnit as Number = 0;
     hidden var propTopPartShows as Number = 0;
@@ -184,7 +186,7 @@ class Segment34View extends WatchUi.WatchFace {
         lowBatt
     }
 
-    var clockBgText = "#####";
+    var clockBgText = "";
 
     (:Round240) const bottomFieldWidths = [3, 3, 3, 0];
     (:Round260) const bottomFieldWidths = [3, 4, 3, 0];
@@ -213,7 +215,6 @@ class Segment34View extends WatchUi.WatchFace {
 
         screenHeight = Toybox.System.getDeviceSettings().screenHeight;
         screenWidth = Toybox.System.getDeviceSettings().screenWidth;
-        fontMoon = Application.loadResource(Rez.Fonts.moon);
         fontIcons = Application.loadResource(Rez.Fonts.icons);
         centerX = Math.round(screenWidth / 2);
         centerY = Math.round(screenHeight / 2);
@@ -227,8 +228,10 @@ class Segment34View extends WatchUi.WatchFace {
     hidden function reloadSettings() as Void {
         updateProperties();
 
-        releaseResources();
         loadResources();
+        if(propTopPartShows == 0) {
+            fontMoon = Application.loadResource(Rez.Fonts.moon);
+        }
 
         halfClockHeight = Math.round(clockHeight / 2);
         if(clockBgText.length() == 4) {
@@ -252,20 +255,6 @@ class Segment34View extends WatchUi.WatchFace {
         strLabelBottomMiddle = getLabelByType(propMiddleValueShows, fieldWidths[1] - 1);
         strLabelBottomRight = getLabelByType(propRightValueShows, fieldWidths[2] - 1);
         strLabelBottomFourth = getLabelByType(propFourthValueShows, fieldWidths[3] - 1);
-    }
-
-    hidden function releaseResources() as Void {
-        fontClock = null;
-        fontClockOutline = null;
-        fontLabel = null;
-        fontTinyData = null;
-        fontSmallData = null;
-        fontLargeData = null;
-        fontAODData = null;
-        fontBottomData = null;
-        fontBattery = null;
-        drawGradient = null;
-        drawAODPattern = null;
     }
 
     hidden function loadSmallFont(resDefault, resReadable, resLines) as Void {
@@ -342,7 +331,7 @@ class Segment34View extends WatchUi.WatchFace {
         fontBattery = fontTinyData;
 
         clockHeight = 80;
-        clockWidth = 227;
+        clockWidth = 230;
         labelHeight = 5;
         labelMargin = 6;
         tinyDataHeight = 8;
@@ -376,7 +365,7 @@ class Segment34View extends WatchUi.WatchFace {
         fontBattery = fontLabel;
 
         clockHeight = 80;
-        clockWidth = 236;
+        clockWidth = 240;
         labelHeight = 8;
         labelMargin = 6;
         tinyDataHeight = 10;
@@ -454,7 +443,7 @@ class Segment34View extends WatchUi.WatchFace {
         loadAODGraphics();
 
         clockHeight = 125;
-        clockWidth = 355;
+        clockWidth = 360;
         labelHeight = 10;
         labelMargin = 8;
         tinyDataHeight = 13;
@@ -631,7 +620,7 @@ class Segment34View extends WatchUi.WatchFace {
         
         // From updateSlowData logic
         values[:dataClock] = getClockData(now);
-        values[:dataMoon] = moonPhase(now);
+        values[:dataMoon] = (propTopPartShows == 0) ? moonPhase(now) : "";
         if(propTopPartShows == 2) {
             values[:dataGraph1] = getDataArrayByType(propHistogramData);
         } else {
@@ -878,19 +867,21 @@ class Segment34View extends WatchUi.WatchFace {
         dc.drawText(centerX, yn1, fontSmallData, values[:dataAboveLine2], Graphics.TEXT_JUSTIFY_CENTER);        
 
         // Draw Clock
-        dc.setColor(themeColors[clockBg], Graphics.COLOR_TRANSPARENT);
-        if(propShowClockBg and !aod) {
-            dc.drawText(baseX, baseY, fontClock, clockBgText, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-        }
-        dc.setColor(themeColors[clock], Graphics.COLOR_TRANSPARENT);
-        dc.drawText(baseX, baseY, fontClock, values[:dataClock], Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        if(propClockOutlineStyle != 5) {
+            dc.setColor(themeColors[clockBg], Graphics.COLOR_TRANSPARENT);
+            if(propShowClockBg and !aod) {
+                dc.drawText(baseX, baseY, fontClock, clockBgText, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            }
+            dc.setColor(themeColors[clock], Graphics.COLOR_TRANSPARENT);
+            dc.drawText(baseX, baseY, fontClock, values[:dataClock], Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
-        // Draw clock gradient
-        if(drawGradient != null and themeColors[bg] == 0x000000 and !aod) {
-            dc.drawBitmap(centerX - halfClockWidth, baseY - halfClockHeight, drawGradient);
+            // Draw clock gradient
+            if(drawGradient != null and themeColors[bg] == 0x000000 and !aod) {
+                dc.drawBitmap(centerX - halfClockWidth, baseY - halfClockHeight, drawGradient);
+            }
         }
 
-        if(propClockOutlineStyle == 2 or propClockOutlineStyle == 3) {
+        if(propClockOutlineStyle == 2 or propClockOutlineStyle == 3 or propClockOutlineStyle == 5) {
             if(fontClockOutline != null) { // Someone has only bothered to draw this font for AMOLED sizes
                 // Draw outline
                 dc.setColor(themeColors[outline], Graphics.COLOR_TRANSPARENT);
@@ -1035,20 +1026,22 @@ class Segment34View extends WatchUi.WatchFace {
             dc.drawText(baseX - halfClockWidth, yn0, fontSmallData, values[:dataNotifications], Graphics.TEXT_JUSTIFY_LEFT);
         }
 
-        // Draw Clock
-        dc.setColor(themeColors[clockBg], Graphics.COLOR_TRANSPARENT);
-        if(propShowClockBg and !aod) {
-            dc.drawText(baseX, baseY, fontClock, clockBgText, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-        }
-        dc.setColor(themeColors[clock], Graphics.COLOR_TRANSPARENT);
-        dc.drawText(baseX, baseY, fontClock, values[:dataClock], Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        if(propClockOutlineStyle != 5) {
+            // Draw Clock
+            dc.setColor(themeColors[clockBg], Graphics.COLOR_TRANSPARENT);
+            if(propShowClockBg and !aod) {
+                dc.drawText(baseX, baseY, fontClock, clockBgText, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            }
+            dc.setColor(themeColors[clock], Graphics.COLOR_TRANSPARENT);
+            dc.drawText(baseX, baseY, fontClock, values[:dataClock], Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
-        // Draw clock gradient
-        if(drawGradient != null and themeColors[bg] == 0x000000 and !aod) {
-            dc.drawBitmap(centerX - halfClockWidth, baseY - halfClockHeight, drawGradient);
+            // Draw clock gradient
+            if(drawGradient != null and themeColors[bg] == 0x000000 and !aod) {
+                dc.drawBitmap(centerX - halfClockWidth, baseY - halfClockHeight, drawGradient);
+            }
         }
 
-        if(propClockOutlineStyle == 2 or propClockOutlineStyle == 3) {
+        if(propClockOutlineStyle == 2 or propClockOutlineStyle == 3 or propClockOutlineStyle == 5) {
             if(fontClockOutline != null) {
                 dc.setColor(themeColors[outline], Graphics.COLOR_TRANSPARENT);
                 dc.drawText(baseX, baseY, fontClockOutline, values[:dataClock], Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
@@ -1093,13 +1086,13 @@ class Segment34View extends WatchUi.WatchFace {
             var clock_color = themeColors[clock];
             if(clock_color == 0x000000) { clock_color = 0x555555; }
 
-            if(propClockOutlineStyle == 0 or propClockOutlineStyle == 2 or propClockOutlineStyle == 5) {
+            if(propClockOutlineStyle == 0 or propClockOutlineStyle == 2) {
                 // Draw Clock
                 dc.setColor(clock_color, Graphics.COLOR_TRANSPARENT);
                 dc.drawText(baseX, baseY, fontClock, values[:dataClock], Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
             }
 
-            if(propClockOutlineStyle == 1 or propClockOutlineStyle == 2 or propClockOutlineStyle == 3) {
+            if(propClockOutlineStyle == 1 or propClockOutlineStyle == 2 or propClockOutlineStyle == 3 or propClockOutlineStyle == 5) {
                 dc.setColor(themeColors[outline], Graphics.COLOR_TRANSPARENT);
                 dc.drawText(baseX, baseY, fontClockOutline, values[:dataClock], Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
             }
@@ -1325,7 +1318,7 @@ class Segment34View extends WatchUi.WatchFace {
     }
 
     hidden function setColorTheme(theme as Number) as Array<Graphics.ColorType> {
-        if(theme == 30) { return parseCustomThemeString(propColorOverride); }
+        if(theme == 30) { return parseThemeString(propColorOverride); }
 
         var themeRes = [
             Rez.Strings.theme_0, Rez.Strings.theme_1, Rez.Strings.theme_2, Rez.Strings.theme_3,
@@ -1346,31 +1339,9 @@ class Segment34View extends WatchUi.WatchFace {
         return parseThemeString(str);
     }
 
-    hidden function parseThemeString(csv as String) as Array<Graphics.ColorType> {
-        var res = new [13]; 
-        var comma = 0;
-        for(var i=0; i<13; i++) {
-            comma = csv.find(",");
-            var hex = "";
-            if(comma != null) {
-                hex = csv.substring(0, comma);
-                csv = csv.substring(comma + 1, csv.length());
-            } else {
-                hex = csv;
-            }
-            
-            if(hex.equals("FFFFFFFF")) {
-                res[i] = Graphics.COLOR_TRANSPARENT; 
-            } else {
-                res[i] = hex.toNumberWithBase(16);
-            }
-        }
-        return res;
-    }
-
-    hidden function parseCustomThemeString(str as String) as Array<Graphics.ColorType> {
+    hidden function parseThemeString(str as String) as Array<Graphics.ColorType> {
         if(str.length() == 0) { return setColorTheme(-1); }
-        
+
         var ret = [];
         var color_str = "";
         var color = null;
@@ -1379,12 +1350,15 @@ class Segment34View extends WatchUi.WatchFace {
         for(var i=0; i<len; i += 8) {
             if(i+7 > len) { break; }
             color_str = str.substring(i+1, i+7);
-            color = color_str.toNumberWithBase(16);
-            
-            if(color == null or color < 0 or color > 16777215) {
-                 return setColorTheme(-1);
+            if(color_str.equals("TRANSP")) {
+                ret.add(Graphics.COLOR_TRANSPARENT as Graphics.ColorType);
+            } else {
+                color = color_str.toNumberWithBase(16);
+                if(color == null or color < 0 or color > 16777215) {
+                    return setColorTheme(-1);
+                }
+                ret.add(color as Graphics.ColorType);
             }
-            ret.add(color as Graphics.ColorType);
         }
 
         if(ret.size() != 13) {
@@ -1454,150 +1428,135 @@ class Segment34View extends WatchUi.WatchFace {
         return false;
     }
 
-    hidden function getValueOrDefault(propName as String, defaultVal as PropertyValueType) as PropertyValueType {
-        try {
-            var val = Application.Properties.getValue(propName);
-            if(val == null) {
-                return defaultVal;
-            }
-            return val;
-        } catch(e instanceof Lang.Exception) {
-            System.println("getValueOrDefault(" + propName + "): " + e.getErrorMessage());
-            return defaultVal;
-        }
-    }
-
     hidden function updateProperties() as Void {
-        propTheme = getValueOrDefault("colorTheme", 0) as Number;
-        propNightTheme = getValueOrDefault("nightColorTheme", -1) as Number;
-        propNightThemeActivation = getValueOrDefault("nightThemeActivation", 0) as Number;
-        propColorOverride = getValueOrDefault("colorOverride", "") as String;
-        propClockOutlineStyle = getValueOrDefault("clockOutlineStyle", 0) as Number;
-        propClockGradientOverlay = getValueOrDefault("clockGradientOverlay", 0) as Number;
-        propClockFont = getValueOrDefault("clockFont", 0) as Number;
+        var p = Application.Properties;
+        propTheme = p.getValue("colorTheme") as Number;
+        propNightTheme = p.getValue("nightColorTheme") as Number;
+        propNightThemeActivation = p.getValue("nightThemeActivation") as Number;
+        propColorOverride = p.getValue("colorOverride") as String;
+        propClockOutlineStyle = p.getValue("clockOutlineStyle") as Number;
+        propClockGradientOverlay = p.getValue("clockGradientOverlay") as Number;
+        propClockFont = p.getValue("clockFont") as Number;
 
-        propTopPartShows = getValueOrDefault("topPartShows", 0) as Number;
-        propHistogramData = getValueOrDefault("histogramData", 0) as Number;
-        propSunriseFieldShows = getValueOrDefault("sunriseFieldShows", 39) as Number;
-        propSunsetFieldShows = getValueOrDefault("sunsetFieldShows", 40) as Number;
-        propWeatherLine1Shows = getValueOrDefault("weatherLine1Shows", 49) as Number;
-        propWeatherLine2Shows = getValueOrDefault("weatherLine2Shows", 50) as Number;
-        propDateFieldShows = getValueOrDefault("dateFieldShows", -1) as Number;
-        propShowSeconds = getValueOrDefault("showSeconds", true) as Boolean;
-        propAlwaysShowSeconds = getValueOrDefault("alwaysShowSeconds", false) as Boolean;
-        propFieldLayout = getValueOrDefault("fieldLayout", 0) as Number;
-        propLeftValueShows = getValueOrDefault("leftValueShows", 6) as Number;
-        propMiddleValueShows = getValueOrDefault("middleValueShows", 10) as Number;
-        propRightValueShows = getValueOrDefault("rightValueShows", 0) as Number;
-        propFourthValueShows = getValueOrDefault("fourthValueShows", -2) as Number;
-        propBottomFieldShows = getValueOrDefault("bottomFieldShows", 17) as Number;
+        propTopPartShows = p.getValue("topPartShows") as Number;
+        propHistogramData = p.getValue("histogramData") as Number;
+        propSunriseFieldShows = p.getValue("sunriseFieldShows") as Number;
+        propSunsetFieldShows = p.getValue("sunsetFieldShows") as Number;
+        propWeatherLine1Shows = p.getValue("weatherLine1Shows") as Number;
+        propWeatherLine2Shows = p.getValue("weatherLine2Shows") as Number;
+        propDateFieldShows = p.getValue("dateFieldShows") as Number;
+        propShowSeconds = p.getValue("showSeconds") as Boolean;
+        propAlwaysShowSeconds = p.getValue("alwaysShowSeconds") as Boolean;
+        propFieldLayout = p.getValue("fieldLayout") as Number;
+        propLeftValueShows = p.getValue("leftValueShows") as Number;
+        propMiddleValueShows = p.getValue("middleValueShows") as Number;
+        propRightValueShows = p.getValue("rightValueShows") as Number;
+        propFourthValueShows = p.getValue("fourthValueShows") as Number;
+        propBottomFieldShows = p.getValue("bottomFieldShows") as Number;
         loadBottomField2Property();
-        propLeftBarShows = getValueOrDefault("leftBarShows", 1) as Number;
-        propRightBarShows = getValueOrDefault("rightBarShows", 2) as Number;
-        propIcon1 = getValueOrDefault("icon1", 1) as Number;
-        propIcon2 = getValueOrDefault("icon2", 2) as Number;
-        propBatteryVariant = getValueOrDefault("batteryVariant", 3) as Number;
-        
-        propUpdateFreq = getValueOrDefault("updateFreq", 5) as Number;
-        propShowClockBg = getValueOrDefault("showClockBg", true) as Boolean;
-        propShowDataBg = getValueOrDefault("showDataBg", true) as Boolean;
-        propAodStyle = getValueOrDefault("aodStyle", 1) as Number;
-        propAodFieldShows = getValueOrDefault("aodFieldShows", -1) as Number;
-        propAodRightFieldShows = getValueOrDefault("aodRightFieldShows", -2) as Number;
-        propAodAlignment = getValueOrDefault("aodAlignment", 0) as Number;
-        propDateAlignment = getValueOrDefault("dateAlignment", 0) as Number;
-        propBottomFieldAlignment = getValueOrDefault("bottomFieldAlignment", 2) as Number;
-        propBottomFieldLabelAlignment = getValueOrDefault("bottomFieldLabelAlignment", 0) as Number;
-        propHemisphere = getValueOrDefault("hemisphere", 0) as Number;
-        propHourFormat = getValueOrDefault("hourFormat", 0) as Number;
-        propZeropadHour = getValueOrDefault("zeropadHour", true) as Boolean;
-        propTimeSeparator = getValueOrDefault("timeSeparator", 0) as Number;
-        propTempUnit = getValueOrDefault("tempUnit", 0) as Number;
-        propShowTempUnit = getValueOrDefault("showTempUnit", true) as Boolean;
-        propDistanceUnit = getValueOrDefault("distanceUnit", 0) as Number;
-        propWindUnit = getValueOrDefault("windUnit", 0) as Number;
-        propPressureUnit = getValueOrDefault("pressureUnit", 0) as Number;
-        propLabelVisibility = getValueOrDefault("labelVisibility", 0) as Number;
-        propDateFormat = getValueOrDefault("dateFormat", 0) as Number;
-        propNotificationCountShows = getValueOrDefault("notificationCountShows", 36) as Number;
-        propTzOffset1 = getValueOrDefault("tzOffset1", 0) as Number;
-        propTzOffset2 = getValueOrDefault("tzOffset2", 0) as Number;
-        propTzName1 = getValueOrDefault("tzName1", "UTC TIME") as String;
-        propTzName2 = getValueOrDefault("tzName2", "TZ2") as String;
-        propWeekOffset = getValueOrDefault("weekOffset", 0) as Number;
-        propSmallFontVariant = getValueOrDefault("smallFontVariant", 2) as Number;
+        propLeftBarShows = p.getValue("leftBarShows") as Number;
+        propRightBarShows = p.getValue("rightBarShows") as Number;
+        propIcon1 = p.getValue("icon1") as Number;
+        propIcon2 = p.getValue("icon2") as Number;
+        propBatteryVariant = p.getValue("batteryVariant") as Number;
+
+        propUpdateFreq = p.getValue("updateFreq") as Number;
+        propShowClockBg = p.getValue("showClockBg") as Boolean;
+        propShowDataBg = p.getValue("showDataBg") as Boolean;
+        propAodStyle = p.getValue("aodStyle") as Number;
+        propAodFieldShows = p.getValue("aodFieldShows") as Number;
+        propAodRightFieldShows = p.getValue("aodRightFieldShows") as Number;
+        propAodAlignment = p.getValue("aodAlignment") as Number;
+        propDateAlignment = p.getValue("dateAlignment") as Number;
+        propBottomFieldAlignment = p.getValue("bottomFieldAlignment") as Number;
+        propBottomFieldLabelAlignment = p.getValue("bottomFieldLabelAlignment") as Number;
+        propHemisphere = p.getValue("hemisphere") as Number;
+        propHourFormat = p.getValue("hourFormat") as Number;
+        propZeropadHour = p.getValue("zeropadHour") as Boolean;
         propIs24H = System.getDeviceSettings().is24Hour;
-        propStressDynamicColor = getValueOrDefault("stressDynamicColor", false) as Boolean;
+        propTimeSeparator = p.getValue("timeSeparator") as Number;
+        // propTimeSeparator Auto (4): if 12h time use AM/PM (3), if 24h time use : (4)
+        if (propTimeSeparator == 4) {
+            if ((!propIs24H and propHourFormat == 0) or propHourFormat == 2) { propTimeSeparator = 3; } else { propTimeSeparator = 0; }
+        }
+        propTempUnit = p.getValue("tempUnit") as Number;
+        propShowTempUnit = p.getValue("showTempUnit") as Boolean;
+        propDistanceUnit = p.getValue("distanceUnit") as Number;
+        propIsMetricDistance = (System.getDeviceSettings().distanceUnits == System.UNIT_METRIC and propDistanceUnit == 0) or propDistanceUnit == 1;
+        propWindUnit = p.getValue("windUnit") as Number;
+        propPressureUnit = p.getValue("pressureUnit") as Number;
+        propLabelVisibility = p.getValue("labelVisibility") as Number;
+        propDateFormat = p.getValue("dateFormat") as Number;
+        propNotificationCountShows = p.getValue("notificationCountShows") as Number;
+        propTzOffset1 = p.getValue("tzOffset1") as Number;
+        propTzOffset2 = p.getValue("tzOffset2") as Number;
+        propTzName1 = p.getValue("tzName1") as String;
+        propTzName2 = p.getValue("tzName2") as String;
+        propWeekOffset = p.getValue("weekOffset") as Number;
+        propSmallFontVariant = p.getValue("smallFontVariant") as Number;
+        propStressDynamicColor = p.getValue("stressDynamicColor") as Boolean;
 
         nightMode = null; // force update color theme
         updateColorTheme();
         updateActiveLabels();
 
-        isWeatherRequired = false;
-
-        var weatherFields = [
-            propSunriseFieldShows, propSunsetFieldShows,
-            propWeatherLine1Shows, propWeatherLine2Shows,
-            propDateFieldShows,
-            propLeftValueShows, propMiddleValueShows, 
-            propRightValueShows, propFourthValueShows,
-            propBottomFieldShows,
-            propAodFieldShows, propAodRightFieldShows,
-            getBottomField2Shows()
-        ];
-
-        for(var i=0; i<weatherFields.size(); i++) {
-            if (isWeatherSource(weatherFields[i])) {
-                isWeatherRequired = true;
-                break;
-            }
+        if(propTimeSeparator == 2) {
+            clockBgText = "####";
+        } else if(propTimeSeparator == 3) {
+            clockBgText = "####B";
+        } else {
+            clockBgText = "#####";
         }
-
-        initializeWeatherData();
-
-        if(propTimeSeparator == 2) { clockBgText = "####"; } else { clockBgText = "#####"; }
     }
 
+    (:HighMem)
     hidden function getAltitudeValue() as Float? {
-        // 1. Best: Complications (Modern approach)
         if (hasComplications) {
             try {
                 var comp = Complications.getComplication(new Id(Complications.COMPLICATION_TYPE_ALTITUDE));
-                if (comp != null && comp.value != null) {
-                    return comp.value.toFloat(); 
-                }
+                if (comp != null && comp.value != null) { return comp.value.toFloat(); }
             } catch(e) {}
         }
-
-        // 2. From Sensor History
         if ((Toybox has :SensorHistory) && (Toybox.SensorHistory has :getElevationHistory)) {
             var elv_iterator = Toybox.SensorHistory.getElevationHistory({:period => 1});
             if (elv_iterator != null) {
                 var sample = elv_iterator.next();
-                if (sample != null && sample.data != null) {
-                    return sample.data.toFloat();
-                }
+                if (sample != null && sample.data != null) { return sample.data.toFloat(); }
             }
         }
-
-        // 3. Fallback: Activity Info
         var info = Activity.getActivityInfo();
-        if (info != null && info.altitude != null) {
-            return info.altitude.toFloat();
-        }
+        if (info != null && info.altitude != null) { return info.altitude.toFloat(); }
+        return null;
+    }
 
+    (:LowMem)
+    hidden function getAltitudeValue() as Float? {
+        if ((Toybox has :SensorHistory) && (Toybox.SensorHistory has :getElevationHistory)) {
+            var elv_iterator = Toybox.SensorHistory.getElevationHistory({:period => 1});
+            if (elv_iterator != null) {
+                var sample = elv_iterator.next();
+                if (sample != null && sample.data != null) { return sample.data.toFloat(); }
+            }
+        }
+        var info = Activity.getActivityInfo();
+        if (info != null && info.altitude != null) { return info.altitude.toFloat(); }
         return null;
     }
 
     hidden function getClockData(now as Gregorian.Info) as String {
         var separator = ":";
+        var after = "";
         if(propTimeSeparator == 1) { separator = " "; }
         if(propTimeSeparator == 2) { separator = ""; }
+        if(propTimeSeparator == 3) {
+            separator = ""; 
+            if(now.hour >= 12) { after = "P"; } else { after = "A"; }
+        }
 
         if(propZeropadHour) {
-            return formatHour(now.hour).format("%02d") + separator + now.min.format("%02d");
+            return formatHour(now.hour).format("%02d") + separator + now.min.format("%02d") + after;
         } else {
-            return formatHour(now.hour).format("%2d") + separator + now.min.format("%02d");
+            return formatHour(now.hour).format("%2d") + separator + now.min.format("%02d") + after;
         }
     }
 
@@ -1664,6 +1623,7 @@ class Segment34View extends WatchUi.WatchFace {
         return null;
     }
 
+    (:HighMem)
     hidden function getStressData() as Number? {
         if (hasComplications) {
             try {
@@ -1671,19 +1631,25 @@ class Segment34View extends WatchUi.WatchFace {
                 if (complication_stress != null && complication_stress.value != null) {
                     return complication_stress.value;
                 }
-            } catch(e) {
-                // Complication not found
-            }
+            } catch(e) {}
         }
-
         if ((Toybox has :SensorHistory) && (Toybox.SensorHistory has :getBodyBatteryHistory) && (Toybox.SensorHistory has :getStressHistory)) {
             var st_iterator = Toybox.SensorHistory.getStressHistory({:period => 1});
             if (st_iterator != null) {
                 var st = st_iterator.next();
+                if(st != null) { return st.data; }
+            }
+        }
+        return null;
+    }
 
-                if(st != null) {
-                    return st.data;
-                }
+    (:LowMem)
+    hidden function getStressData() as Number? {
+        if ((Toybox has :SensorHistory) && (Toybox.SensorHistory has :getBodyBatteryHistory) && (Toybox.SensorHistory has :getStressHistory)) {
+            var st_iterator = Toybox.SensorHistory.getStressHistory({:period => 1});
+            if (st_iterator != null) {
+                var st = st_iterator.next();
+                if(st != null) { return st.data; }
             }
         }
         return null;
@@ -1696,26 +1662,31 @@ class Segment34View extends WatchUi.WatchFace {
         return 0xAA0000;                   // High (Red)
     }
 
+    (:HighMem)
     hidden function getBBData() as Number? {
         if (hasComplications) {
             try {
                 var complication_bb = Complications.getComplication(new Id(Complications.COMPLICATION_TYPE_BODY_BATTERY));
-                if (complication_bb != null && complication_bb.value != null) {
-                    return complication_bb.value;
-                }
-            } catch(e) {
-                // Complication not found
-            }
+                if (complication_bb != null && complication_bb.value != null) { return complication_bb.value; }
+            } catch(e) {}
         }
-
         if ((Toybox has :SensorHistory) && (Toybox.SensorHistory has :getBodyBatteryHistory) && (Toybox.SensorHistory has :getStressHistory)) {
             var bb_iterator = Toybox.SensorHistory.getBodyBatteryHistory({:period => 1});
             if (bb_iterator != null) {
                 var bb = bb_iterator.next();
+                if(bb != null) { return bb.data; }
+            }
+        }
+        return null;
+    }
 
-                if(bb != null) {
-                    return bb.data;
-                }
+    (:LowMem)
+    hidden function getBBData() as Number? {
+        if ((Toybox has :SensorHistory) && (Toybox.SensorHistory has :getBodyBatteryHistory) && (Toybox.SensorHistory has :getStressHistory)) {
+            var bb_iterator = Toybox.SensorHistory.getBodyBatteryHistory({:period => 1});
+            if (bb_iterator != null) {
+                var bb = bb_iterator.next();
+                if(bb != null) { return bb.data; }
             }
         }
         return null;
@@ -1815,29 +1786,7 @@ class Segment34View extends WatchUi.WatchFace {
     }
 
     (:WeatherCache)
-    hidden function initializeWeatherData() as Void {
-        if (isWeatherRequired && weatherCondition == null) {
-            try { weatherCondition = readWeatherData(); } catch(e) {}
-            if (weatherCondition == null) {
-                if(Toybox has :Weather && Weather has :getCurrentConditions) {
-                    weatherCondition = Weather.getCurrentConditions();
-                }
-            }
-        }
-    }
-
-    (:NoWeatherCache)
-    hidden function initializeWeatherData() as Void {
-        if (isWeatherRequired && weatherCondition == null) {
-            if(Toybox has :Weather && Weather has :getCurrentConditions) {
-                weatherCondition = Weather.getCurrentConditions();
-            }
-        }
-    }
-
-    (:WeatherCache)
     hidden function updateWeather() as Void {
-        if (!isWeatherRequired) { return; }
         if(!(Toybox has :Weather) or !(Weather has :getCurrentConditions)) { return; }
 
         if(Weather.getCurrentConditions() != null) {
@@ -1851,25 +1800,16 @@ class Segment34View extends WatchUi.WatchFace {
 
     (:NoWeatherCache)
     hidden function updateWeather() as Void {
-        if (!isWeatherRequired) { return; }
         if(!(Toybox has :Weather) or !(Weather has :getCurrentConditions)) { return; }
         weatherCondition = Weather.getCurrentConditions();
         cachedTempUnit = getTempUnit();
     }
 
-    hidden function isWeatherSource(id as Number) as Boolean {
-        if (id == 20 || id == 39 || id == 40 || (id >= 43 && id <= 55) || (id >= 63 && id <= 70)) {
-            return true;
-        }
-        return false;
-    }
 
     (:WeatherCache)
     hidden function computeCcHash(cc) as Number {
         if (cc == null) { return 0; }
-        
         var h = 17;
-
         var t = (cc.temperature != null) ? cc.temperature : -127;
         h = 31 * h + t;
         var c = (cc.condition != null) ? cc.condition : -1;
@@ -2002,6 +1942,96 @@ class Segment34View extends WatchUi.WatchFace {
         return ret;
     }
 
+    // Helpers for getValueByType() complications branches — excluded on LowMem (no Complications API)
+
+    (:HighMem)
+    hidden function getRecoveryTimeVal(numberFormat as String) as String {
+        if (hasComplications) {
+            try {
+                var complication = Complications.getComplication(new Id(Complications.COMPLICATION_TYPE_RECOVERY_TIME));
+                if (complication != null && complication.value != null) {
+                    var recovery_h = complication.value / 60.0;
+                    if(recovery_h < 9.9 and recovery_h != 0) { return recovery_h.format("%.1f"); }
+                    return Math.round(recovery_h).format(numberFormat);
+                }
+            } catch(e) {}
+        }
+        var info = ActivityMonitor.getInfo();
+        if(info has :timeToRecovery && info.timeToRecovery != null) { return info.timeToRecovery.format(numberFormat); }
+        return "";
+    }
+    (:LowMem)
+    hidden function getRecoveryTimeVal(numberFormat as String) as String {
+        var info = ActivityMonitor.getInfo();
+        if(info has :timeToRecovery && info.timeToRecovery != null) { return info.timeToRecovery.format(numberFormat); }
+        return "";
+    }
+
+    (:HighMem)
+    hidden function getTrainingStatusVal() as String {
+        if (hasComplications) {
+            try {
+                var complication = Complications.getComplication(new Id(Complications.COMPLICATION_TYPE_TRAINING_STATUS));
+                if (complication != null && complication.value != null) { return complication.value.toUpper(); }
+            } catch(e) {}
+        }
+        return "";
+    }
+    (:LowMem)
+    hidden function getTrainingStatusVal() as String { return ""; }
+
+    (:HighMem)
+    hidden function getCalendarEventVal(width as Number) as String {
+        if (hasComplications) {
+            try {
+                var complication = Complications.getComplication(new Id(Complications.COMPLICATION_TYPE_CALENDAR_EVENTS));
+                var colon_index = null;
+                var val = "";
+                if (complication != null && complication.value != null) {
+                    val = complication.value;
+                    colon_index = val.find(":");
+                    if (colon_index != null && colon_index < 2) { val = "0" + val; }
+                } else {
+                    val = "--:--";
+                }
+                if (width < 5 and colon_index != null) { val = val.substring(0, 2) + val.substring(3, 5); }
+                return val;
+            } catch(e) {}
+        }
+        return "";
+    }
+    (:LowMem)
+    hidden function getCalendarEventVal(width as Number) as String { return ""; }
+
+    (:HighMem)
+    hidden function getPulseOxVal(numberFormat as String) as String {
+        if (hasComplications) {
+            try {
+                var complication = Complications.getComplication(new Id(Complications.COMPLICATION_TYPE_PULSE_OX));
+                if (complication != null && complication.value != null) { return complication.value.format(numberFormat); }
+            } catch(e) {}
+        }
+        if ((Toybox has :SensorHistory) and (Toybox.SensorHistory has :getOxygenSaturationHistory)) {
+            var it = Toybox.SensorHistory.getOxygenSaturationHistory({:period => 1});
+            if (it != null) {
+                var ox = it.next();
+                if(ox != null and ox.data != null) { return ox.data.format("%d"); }
+            }
+        }
+        return "";
+    }
+    (:LowMem)
+    hidden function getPulseOxVal(numberFormat as String) as String {
+        if ((Toybox has :SensorHistory) and (Toybox.SensorHistory has :getOxygenSaturationHistory)) {
+            var it = Toybox.SensorHistory.getOxygenSaturationHistory({:period => 1});
+            if (it != null) {
+                var ox = it.next();
+                if(ox != null and ox.data != null) { return ox.data.format("%d"); }
+            }
+        }
+        return "";
+    }
+
     hidden function getValueByTypeWithUnit(complicationType as Number, width as Number) as String {
         var unit = getUnitByType(complicationType);
         if (unit.length() > 0) {
@@ -2057,7 +2087,7 @@ class Segment34View extends WatchUi.WatchFace {
             if(activityInfo == null) { activityInfo = ActivityMonitor.getInfo(); }
             if(activityInfo has :distance) {
                 if(activityInfo.distance != null) {
-                    val = formatDistanceByWidth(activityInfo.distance / (isMetricDistance() ? 100000.0 : 160900.0), width);
+                    val = formatDistanceByWidth(activityInfo.distance / (propIsMetricDistance ? 100000.0 : 160900.0), width);
                 }
             }
         } else if(complicationType == 4) { // floors climbed / day
@@ -2075,23 +2105,8 @@ class Segment34View extends WatchUi.WatchFace {
                 }
             }
         } else if(complicationType == 6) { // Time to Recovery (h)
-            if (hasComplications) {
-                try {
-                    var complication = Complications.getComplication(new Id(Complications.COMPLICATION_TYPE_RECOVERY_TIME));
-                    if (complication != null && complication.value != null) {
-                        var recovery_h = complication.value / 60.0;
-                        if(recovery_h < 9.9 and recovery_h != 0) { val = recovery_h.format("%.1f"); } else { val = Math.round(recovery_h).format(numberFormat); }
-                    }
-                } catch(e) {}
-            } else {
-                if(activityInfo == null) { activityInfo = ActivityMonitor.getInfo(); }
-                if(activityInfo has :timeToRecovery) {
-                    if(activityInfo.timeToRecovery != null) {
-                        val = activityInfo.timeToRecovery.format(numberFormat);
-                    }
-                }
-            }
-            
+            val = getRecoveryTimeVal(numberFormat);
+
         } else if(complicationType == 7) { // VO2 Max Running
             var profile = UserProfile.getProfile();
             if(profile has :vo2maxRunning) {
@@ -2189,20 +2204,11 @@ class Segment34View extends WatchUi.WatchFace {
         } else if(complicationType == 20) { // Weather condition
             val = getWeatherCondition(true);
         } else if(complicationType == 21 || complicationType == 22) { // Weekly run distance
-            val = getWeeklyDistanceFromComplication(true, isMetricDistance() ? 0.001 : 0.000621371, width);
+            val = getWeeklyDistanceFromComplication(true, propIsMetricDistance ? 0.001 : 0.000621371, width);
         } else if(complicationType == 23 || complicationType == 24) { // Weekly bike distance
-            val = getWeeklyDistanceFromComplication(false, isMetricDistance() ? 0.001 : 0.000621371, width);
+            val = getWeeklyDistanceFromComplication(false, propIsMetricDistance ? 0.001 : 0.000621371, width);
         } else if(complicationType == 25) { // Training status
-            if (hasComplications) {
-                try {
-                    var complication = Complications.getComplication(new Id(Complications.COMPLICATION_TYPE_TRAINING_STATUS));
-                    if (complication != null && complication.value != null) {
-                        val = complication.value.toUpper();
-                    }
-                } catch(e) {
-                    // Complication not found
-                }
-            }
+            val = getTrainingStatusVal();
         } else if(complicationType == 26) { // Raw Barometric pressure (hPA)
             var info = Activity.getActivityInfo();
             if (info has :rawAmbientPressure && info.rawAmbientPressure != null) {
@@ -2247,16 +2253,14 @@ class Segment34View extends WatchUi.WatchFace {
             var week_number = isoWeekNumber(today.year, today.month, today.day);
             val = week_number.format(numberFormat);
         } else if(complicationType == 32 || complicationType == 33) { // Total distance past 7 days
-            val = formatDistanceByWidth(getWeeklyDistance() * (isMetricDistance() ? 0.00001 : 0.00000621371), width);
+            val = formatDistanceByWidth(getWeeklyDistance() * (propIsMetricDistance ? 0.00001 : 0.00000621371), width);
         } else if(complicationType == 34) { // Battery percentage
             var battery = System.getSystemStats().battery;
             val = battery.format("%d");
         } else if(complicationType == 35) { // Battery days remaining
-            if(System.getSystemStats() has :batteryInDays) {
-                if (System.getSystemStats().batteryInDays != null){
-                    var sample = Math.round(System.getSystemStats().batteryInDays);
-                    val = sample.format(numberFormat);
-                }
+            var stats35 = System.getSystemStats();
+            if(stats35 has :batteryInDays and stats35.batteryInDays != null) {
+                val = Math.round(stats35.batteryInDays).format(numberFormat);
             }
         } else if(complicationType == 36) { // Notification count
             var notif_count = System.getDeviceSettings().notificationCount;
@@ -2268,8 +2272,9 @@ class Segment34View extends WatchUi.WatchFace {
                 }
             }
         } else if(complicationType == 37) { // Solar intensity
-            if(System.getSystemStats() has :solarIntensity and System.getSystemStats().solarIntensity != null) {
-                val = System.getSystemStats().solarIntensity.format(numberFormat);
+            var stats37 = System.getSystemStats();
+            if(stats37 has :solarIntensity and stats37.solarIntensity != null) {
+                val = stats37.solarIntensity.format(numberFormat);
             }
         } else if(complicationType == 38) { // Sensor temperature
             if ((Toybox has :SensorHistory) and (Toybox.SensorHistory has :getTemperatureHistory)) {
@@ -2308,38 +2313,38 @@ class Segment34View extends WatchUi.WatchFace {
             var temp = getTemperature();
             var wind = getWind();
             var feelsLike = getFeelsLike(true);
-            val = join([temp, wind, feelsLike]);
+            val = joinFour(temp, wind, feelsLike, "");
         } else if(complicationType == 46) { // Temperature, Wind
             var temp = getTemperature();
             var wind = getWind();
-            val = join([temp, wind]);
+            val = joinFour(temp, wind, "", "");
         } else if(complicationType == 47) { // Temperature, Wind, Humidity
             var temp = getTemperature();
             var wind = getWind();
             var humidity = getHumidity();
-            val = join([temp, wind, humidity]);
+            val = joinFour(temp, wind, humidity, "");
         } else if(complicationType == 48) { // Temperature, Wind, High/Low
             var temp = getTemperature();
             var wind = getWind();
             var highlow = getHighLow();
-            val = join([temp, wind, highlow]);
+            val = joinFour(temp, wind, highlow, "");
         } else if(complicationType == 49) { // Temperature, Wind, Precipitation chance
             var temp = getTemperature();
             var wind = getWind();
             var precip = getPrecip();
-            val = join([temp, wind, precip]);
+            val = joinFour(temp, wind, precip, "");
         } else if(complicationType == 50) { // Weather condition without precipitation
             val = getWeatherCondition(false);
         } else if(complicationType == 51) { // Temperature, Humidity, High/Low
             var temp = getTemperature();
             var humidity = getHumidity();
             var highlow = getHighLow();
-            val = join([temp, humidity, highlow]);
+            val = joinFour(temp, humidity, highlow, "");
         } else if(complicationType == 52) { // Temperature, Percipitation chance, High/Low
             var temp = getTemperature();
             var precip = getPrecip();
             var highlow = getHighLow();
-            val = join([temp, precip, highlow]);
+            val = joinFour(temp, precip, highlow, "");
         } else if(complicationType == 53) { // Temperature
             val = getTemperature();
         } else if(complicationType == 54) { // Precipitation chance
@@ -2353,26 +2358,7 @@ class Segment34View extends WatchUi.WatchFace {
         } else if(complicationType == 56) { // Millitary Date Time Group
             val = getDateTimeGroup();
         } else if(complicationType == 57) { // Time of the next Calendar Event
-            if (hasComplications) {
-                try {
-                    var complication = Complications.getComplication(new Id(Complications.COMPLICATION_TYPE_CALENDAR_EVENTS));
-                    var colon_index = null;
-                    if (complication != null && complication.value != null) {
-                        val = complication.value;
-                        colon_index = val.find(":");
-                        if (colon_index != null && colon_index < 2) {
-                            val = "0" + val;
-                        }
-                    } else {
-                        val = "--:--";
-                    }
-                    if (width < 5 and colon_index != null) {
-                        val = val.substring(0, 2) + val.substring(3, 5);
-                    }
-                } catch(e) {
-                    // Complication not found
-                }
-            }
+            val = getCalendarEventVal(width);
         } else if(complicationType == 58) { // Active / Total calories
             if(activityInfo == null) { activityInfo = ActivityMonitor.getInfo(); }
             var rest_calories = getRestCalories();
@@ -2385,26 +2371,7 @@ class Segment34View extends WatchUi.WatchFace {
             active_calories = (active_calories > 0) ? active_calories : 0; // Ensure active calories is not negative
             val = active_calories.format(numberFormat) + "/" + total_calories.format(numberFormat);
         } else if(complicationType == 59) { // PulseOx
-            if (hasComplications) {
-                try {
-                    var complication = Complications.getComplication(new Id(Complications.COMPLICATION_TYPE_PULSE_OX));
-                    if (complication != null && complication.value != null) {
-                        val = complication.value.format(numberFormat);
-                    }
-                } catch(e) {
-                    // Complication not found
-                }
-            } else {
-                if ((Toybox has :SensorHistory) and (Toybox.SensorHistory has :getOxygenSaturationHistory)) {
-                    var it = Toybox.SensorHistory.getOxygenSaturationHistory({:period => 1});
-                    if (it != null) {
-                        var ox = it.next();
-                        if(ox != null and ox.data != null) {
-                            val = ox.data.format("%d");
-                        }
-                    }
-                }
-            }
+            val = getPulseOxVal(numberFormat);
         } else if(complicationType == 60) { // Location Long Lat dec deg
             var pos = Activity.getActivityInfo().currentLocation;
             if(pos != null) {
@@ -2435,35 +2402,35 @@ class Segment34View extends WatchUi.WatchFace {
             var wind = getWind();
             var humidity = getHumidity();
             var precip = getPrecip();
-            val = join([temp, wind, humidity, precip]);
+            val = joinFour(temp, wind, humidity, precip);
         } else if(complicationType == 64) { // UV Index
             val = getUVIndex();
         } else if(complicationType == 65) { // Temperature, UV Index, High/Low
             var temp = getTemperature();
             var uv = getUVIndex();
             var highlow = getHighLow();
-            val = join([temp, uv, highlow]);
+            val = joinFour(temp, uv, highlow, "");
         } else if(complicationType == 66) { // Humidity
             val = getHumidity();
         } else if(complicationType == 67) { // Temperature, Feels like, High/Low
             var temp = getTemperature();
             var fl = getFeelsLike(true);
             var highlow = getHighLow();
-            val = join([temp, fl, highlow]);
+            val = joinFour(temp, fl, highlow, "");
         } else if(complicationType == 68) { // Temperature, UV, Precip
             var temp = getTemperature();
             var uv = getUVIndex();
             var precip = getPrecip();
-            val = join([temp, uv, precip]);
+            val = joinFour(temp, uv, precip, "");
         } else if(complicationType == 69) { // Temperature, UV, Wind
             var temp = getTemperature();
             var uv = getUVIndex();
             var wind = getWind();
-            val = join([temp, uv, wind]);
+            val = joinFour(temp, uv, wind, "");
         } else if(complicationType == 70) { // Weather condition, Temperature
             var condition = getWeatherCondition(false);
             var temp = getTemperature();
-            val = join([condition, temp]);
+            val = joinFour(condition, temp, "", "");
         } else if(complicationType == 71) { // CGM Glucose + Trend
             val = getCgmReading();
         } else if(complicationType == 72) { // CGM Age (minutes)
@@ -2471,7 +2438,7 @@ class Segment34View extends WatchUi.WatchFace {
         } else if(complicationType == 73) { // Weather condition, Feels like
             var condition = getWeatherCondition(false);
             var fl = getFeelsLike(false);
-            val = join([condition, fl]);
+            val = joinFour(condition, fl, "", "");
         } else if(complicationType == 74) { // Feels like
             val = getFeelsLike(false);
         } else if(complicationType == 75) { // Hours to next sun event
@@ -2484,11 +2451,11 @@ class Segment34View extends WatchUi.WatchFace {
                 }
             }
         } else if(complicationType == 77 || complicationType == 78) { // Run/bike distance past 7 days
-            if(Time.now().value() - lastActivityDistUpdate >= 3600) {
+            if(Time.now().value() - lastActivityDistUpdate >= 60*5) {
                 lastActivityDistUpdate = Time.now().value();
                 updateActivityDistCache();
             }
-            var distFactor = isMetricDistance() ? 0.001 : 0.000621371;
+            var distFactor = propIsMetricDistance ? 0.001 : 0.000621371;
             val = formatDistanceByWidth((complicationType == 77 ? cachedRunDist7Days : cachedBikeDist7Days) * distFactor, width);
         } else if (complicationType == 79 || complicationType == 80) { // Pressure trend/change
             val = getPressureTrendValue(complicationType, width);
@@ -2572,23 +2539,17 @@ class Segment34View extends WatchUi.WatchFace {
         return ret;
     } 
 
+    (:HighMem)
     hidden function getLabelByType(complicationType as Number, labelSize as Number) as String {
         // labelSize 1 = short, 2 = mid, 3 = long
-
-        if(complicationType == 16) {
-            return propTzName1.toUpper() + ":";
-        }
-
-        if(complicationType == 41) {
-            return propTzName2.toUpper() + ":";
-        }
-        
+        if(complicationType == 16) { return propTzName1.toUpper() + ":"; }
+        if(complicationType == 41) { return propTzName2.toUpper() + ":"; }
         switch(complicationType) {
             case 0: return formatLabel(Rez.Strings.LABEL_WMIN_1, Rez.Strings.LABEL_WMIN_2, Rez.Strings.LABEL_WMIN_3, labelSize);
             case 1: return formatLabel(Rez.Strings.LABEL_DMIN_1, Rez.Strings.LABEL_DMIN_2, Rez.Strings.LABEL_DMIN_3, labelSize);
             case 3:
             case 2:
-                if(isMetricDistance()) { return formatLabel(Rez.Strings.LABEL_DKM_1, Rez.Strings.LABEL_DKM_2, Rez.Strings.LABEL_DKM_2, labelSize); }
+                if(propIsMetricDistance) { return formatLabel(Rez.Strings.LABEL_DKM_1, Rez.Strings.LABEL_DKM_2, Rez.Strings.LABEL_DKM_2, labelSize); }
                 return formatLabel(Rez.Strings.LABEL_DMI_1, Rez.Strings.LABEL_DMI_2, Rez.Strings.LABEL_DMI_3, labelSize);
             case 4: return Application.loadResource(Rez.Strings.LABEL_FLOORS);
             case 5: return formatLabel(Rez.Strings.LABEL_CLIMB_1, Rez.Strings.LABEL_CLIMB_2, Rez.Strings.LABEL_CLIMB_2, labelSize);
@@ -2609,12 +2570,12 @@ class Segment34View extends WatchUi.WatchFace {
             case 22:
             case 77:
             case 21:
-                if(isMetricDistance()) { return formatLabel(Rez.Strings.LABEL_WKM_1, Rez.Strings.LABEL_WRUNM_2, Rez.Strings.LABEL_WRUNM_3, labelSize); }
+                if(propIsMetricDistance) { return formatLabel(Rez.Strings.LABEL_WKM_1, Rez.Strings.LABEL_WRUNM_2, Rez.Strings.LABEL_WRUNM_3, labelSize); }
                 return formatLabel(Rez.Strings.LABEL_WMI_1, Rez.Strings.LABEL_WRUNMI_2, Rez.Strings.LABEL_WRUNMI_3, labelSize);
             case 24:
             case 78:
             case 23:
-                if(isMetricDistance()) { return formatLabel(Rez.Strings.LABEL_WKM_1, Rez.Strings.LABEL_WBIKEKM_2, Rez.Strings.LABEL_WBIKEKM_3, labelSize); }
+                if(propIsMetricDistance) { return formatLabel(Rez.Strings.LABEL_WKM_1, Rez.Strings.LABEL_WBIKEKM_2, Rez.Strings.LABEL_WBIKEKM_3, labelSize); }
                 return formatLabel(Rez.Strings.LABEL_WMI_1, Rez.Strings.LABEL_WBIKEMI_2, Rez.Strings.LABEL_WBIKEMI_3, labelSize);
             case 25: return Application.loadResource(Rez.Strings.LABEL_TRAINING);
             case 26: return Application.loadResource(Rez.Strings.LABEL_PRESSURE);
@@ -2625,7 +2586,7 @@ class Segment34View extends WatchUi.WatchFace {
             case 31: return Application.loadResource(Rez.Strings.LABEL_WEEK);
             case 33:
             case 32:
-                if(isMetricDistance()) { return formatLabel(Rez.Strings.LABEL_WKM_1, Rez.Strings.LABEL_WDISTKM_2, Rez.Strings.LABEL_WDISTKM_3, labelSize); }
+                if(propIsMetricDistance) { return formatLabel(Rez.Strings.LABEL_WKM_1, Rez.Strings.LABEL_WDISTKM_2, Rez.Strings.LABEL_WDISTKM_3, labelSize); }
                 return formatLabel(Rez.Strings.LABEL_WMI_1, Rez.Strings.LABEL_WDISTMI_2, Rez.Strings.LABEL_WDISTMI_3, labelSize);
             case 34: return formatLabel(Rez.Strings.LABEL_BATT_1, Rez.Strings.LABEL_BATT_2, Rez.Strings.LABEL_BATT_3, labelSize);
             case 35: return formatLabel(Rez.Strings.LABEL_BATTD_1, Rez.Strings.LABEL_BATTD_2, Rez.Strings.LABEL_BATTD_3, labelSize);
@@ -2653,14 +2614,96 @@ class Segment34View extends WatchUi.WatchFace {
             case 79: return formatLabel(Rez.Strings.LABEL_PRESSURE_1, Rez.Strings.LABEL_PRESSURE_2, Rez.Strings.LABEL_PRESSURE_2, labelSize);
             case 80: return formatLabel(Rez.Strings.LABEL_PRESSURE_CHANGE_1, Rez.Strings.LABEL_PRESSURE_CHANGE_2, Rez.Strings.LABEL_PRESSURE_CHANGE_2, labelSize);
         }
-
         return "";
     }
 
+    (:LowMem)
+    hidden function getLabelByType(complicationType as Number, labelSize as Number) as String {
+        // Low-mem version: formatLabel only takes short + mid (no long/_3 resources)
+        if(complicationType == 16) { return propTzName1.toUpper() + ":"; }
+        if(complicationType == 41) { return propTzName2.toUpper() + ":"; }
+        switch(complicationType) {
+            case 0: return formatLabel(Rez.Strings.LABEL_WMIN_1, Rez.Strings.LABEL_WMIN_2, labelSize);
+            case 1: return formatLabel(Rez.Strings.LABEL_DMIN_1, Rez.Strings.LABEL_DMIN_2, labelSize);
+            case 3:
+            case 2:
+                if(propIsMetricDistance) { return formatLabel(Rez.Strings.LABEL_DKM_1, Rez.Strings.LABEL_DKM_2, labelSize); }
+                return formatLabel(Rez.Strings.LABEL_DMI_1, Rez.Strings.LABEL_DMI_2, labelSize);
+            case 4: return Application.loadResource(Rez.Strings.LABEL_FLOORS);
+            case 5: return formatLabel(Rez.Strings.LABEL_CLIMB_1, Rez.Strings.LABEL_CLIMB_2, labelSize);
+            case 6: return formatLabel(Rez.Strings.LABEL_RECOV_1, Rez.Strings.LABEL_RECOV_2, labelSize);
+            case 7: return formatLabel(Rez.Strings.LABEL_VO2_1, Rez.Strings.LABEL_VO2_2, labelSize);
+            case 8: return formatLabel(Rez.Strings.LABEL_VO2_1, Rez.Strings.LABEL_VO2_2, labelSize);
+            case 9: return formatLabel(Rez.Strings.LABEL_RESP_1, Rez.Strings.LABEL_RESP_2, labelSize);
+            case 10: return Application.loadResource(Rez.Strings.LABEL_HR);
+            case 11: return formatLabel(Rez.Strings.LABEL_CAL_1, Rez.Strings.LABEL_CAL_2, labelSize);
+            case 12: return formatLabel(Rez.Strings.LABEL_ALT_1, Rez.Strings.LABEL_ALT_2, labelSize);
+            case 13: return Application.loadResource(Rez.Strings.LABEL_STRESS);
+            case 14: return formatLabel(Rez.Strings.LABEL_BBAT_1, Rez.Strings.LABEL_BBAT_2, labelSize);
+            case 15: return formatLabel(Rez.Strings.LABEL_ALT_1, Rez.Strings.LABEL_ALT_2, labelSize);
+            case 17: return Application.loadResource(Rez.Strings.LABEL_STEPS);
+            case 18: return formatLabel(Rez.Strings.LABEL_DIST_1, Rez.Strings.LABEL_DIST_2, labelSize);
+            case 19: return Application.loadResource(Rez.Strings.LABEL_PUSHES);
+            case 20: return "";
+            case 22:
+            case 77:
+            case 21:
+                if(propIsMetricDistance) { return formatLabel(Rez.Strings.LABEL_WKM_1, Rez.Strings.LABEL_WRUNM_2, labelSize); }
+                return formatLabel(Rez.Strings.LABEL_WMI_1, Rez.Strings.LABEL_WRUNMI_2, labelSize);
+            case 24:
+            case 78:
+            case 23:
+                if(propIsMetricDistance) { return formatLabel(Rez.Strings.LABEL_WKM_1, Rez.Strings.LABEL_WBIKEKM_2, labelSize); }
+                return formatLabel(Rez.Strings.LABEL_WMI_1, Rez.Strings.LABEL_WBIKEMI_2, labelSize);
+            case 25: return Application.loadResource(Rez.Strings.LABEL_TRAINING);
+            case 26: return Application.loadResource(Rez.Strings.LABEL_PRESSURE);
+            case 27: return formatLabel(Rez.Strings.LABEL_KG_1, Rez.Strings.LABEL_WEIGHT_2, labelSize);
+            case 28: return formatLabel(Rez.Strings.LABEL_LBS_1, Rez.Strings.LABEL_WEIGHT_2, labelSize);
+            case 29: return formatLabel(Rez.Strings.LABEL_ACAL_1, Rez.Strings.LABEL_ACAL_2, labelSize);
+            case 30: return Application.loadResource(Rez.Strings.LABEL_PRESSURE);
+            case 31: return Application.loadResource(Rez.Strings.LABEL_WEEK);
+            case 33:
+            case 32:
+                if(propIsMetricDistance) { return formatLabel(Rez.Strings.LABEL_WKM_1, Rez.Strings.LABEL_WDISTKM_2, labelSize); }
+                return formatLabel(Rez.Strings.LABEL_WMI_1, Rez.Strings.LABEL_WDISTMI_2, labelSize);
+            case 34: return formatLabel(Rez.Strings.LABEL_BATT_1, Rez.Strings.LABEL_BATT_2, labelSize);
+            case 35: return formatLabel(Rez.Strings.LABEL_BATTD_1, Rez.Strings.LABEL_BATTD_2, labelSize);
+            case 36: return formatLabel(Rez.Strings.LABEL_NOTIFS_1, Rez.Strings.LABEL_NOTIFS_1, labelSize);
+            case 37: return formatLabel(Rez.Strings.LABEL_SUN_1, Rez.Strings.LABEL_SUNINT_2, labelSize);
+            case 38: return formatLabel(Rez.Strings.LABEL_TEMP_1, Rez.Strings.LABEL_TEMP_1, labelSize);
+            case 39: return formatLabel(Rez.Strings.LABEL_DAWN_1, Rez.Strings.LABEL_DAWN_2, labelSize);
+            case 40: return formatLabel(Rez.Strings.LABEL_DUSK_1, Rez.Strings.LABEL_DUSK_2, labelSize);
+            case 42: return formatLabel(Rez.Strings.LABEL_ALARM_1, Rez.Strings.LABEL_ALARM_2, labelSize);
+            case 43: return formatLabel(Rez.Strings.LABEL_HIGH_1, Rez.Strings.LABEL_HIGH_2, labelSize);
+            case 44: return formatLabel(Rez.Strings.LABEL_LOW_1, Rez.Strings.LABEL_LOW_2, labelSize);
+            case 53: return formatLabel(Rez.Strings.LABEL_TEMP_1, Rez.Strings.LABEL_TEMP_1, labelSize);
+            case 54: return formatLabel(Rez.Strings.LABEL_PRECIP_1, Rez.Strings.LABEL_PRECIP_1, labelSize);
+            case 55: return formatLabel(Rez.Strings.LABEL_NEXTSUN_1, Rez.Strings.LABEL_NEXTSUN_2, labelSize);
+            case 57: return formatLabel(Rez.Strings.LABEL_NEXTCAL_1, Rez.Strings.LABEL_NEXTCAL_2, labelSize);
+            case 59: return formatLabel(Rez.Strings.LABEL_OX_1, Rez.Strings.LABEL_OX_2, labelSize);
+            case 62: return formatLabel(Rez.Strings.LABEL_ACC_1, Rez.Strings.LABEL_ACC_2, labelSize);
+            case 64: return formatLabel(Rez.Strings.LABEL_UV_1, Rez.Strings.LABEL_UV_2, labelSize);
+            case 66: return formatLabel(Rez.Strings.LABEL_HUM_1, Rez.Strings.LABEL_HUM_2, labelSize);
+            case 71: return WatchUi.loadResource(Rez.Strings.LABEL_CGM) as String;
+            case 72: return WatchUi.loadResource(Rez.Strings.LABEL_CGMAGE) as String;
+            case 74: return formatLabel(Rez.Strings.LABEL_FL, Rez.Strings.LABEL_FL, labelSize);
+            case 75: return formatLabel(Rez.Strings.LABEL_HRS_NEXT_SUN_EVENT_1, Rez.Strings.LABEL_HRS_NEXT_SUN_EVENT_1, labelSize);
+            case 76: return formatLabel(Rez.Strings.LABEL_RHR_1, Rez.Strings.LABEL_RHR_2, labelSize);
+        }
+        return "";
+    }
+
+    (:HighMem)
     hidden function formatLabel(short as ResourceId, mid as ResourceId, long as ResourceId, size as Number) as String {
         if(size == 1) { return Application.loadResource(short) + ":"; }
         if(size == 2) { return Application.loadResource(mid) + ":"; }
         return Application.loadResource(long) + ":";
+    }
+
+    (:LowMem)
+    hidden function formatLabel(short as ResourceId, mid as ResourceId, size as Number) as String {
+        if(size == 1) { return Application.loadResource(short) + ":"; }
+        return Application.loadResource(mid) + ":";
     }
 
     hidden function formatDate() as String {
@@ -2704,18 +2747,12 @@ class Segment34View extends WatchUi.WatchFace {
         return value;
     }
 
-    hidden function join(array as Array<String>) as String {
+    hidden function joinFour(a as String, b as String, c as String, d as String) as String {
         var ret = "";
-        for(var i=0; i<array.size(); i++) {
-            if(array[i].length() == 0) {
-                continue;
-            }
-            if(ret.length() == 0) {
-                ret = array[i];
-            } else {
-                ret = ret + ", " + array[i];
-            }
-        }
+        if(a.length() > 0) { ret = a; }
+        if(b.length() > 0) { ret = ret.length() > 0 ? ret + ", " + b : b; }
+        if(c.length() > 0) { ret = ret.length() > 0 ? ret + ", " + c : c; }
+        if(d.length() > 0) { ret = ret.length() > 0 ? ret + ", " + d : d; }
         return ret;
     }
 
@@ -2840,10 +2877,6 @@ class Segment34View extends WatchUi.WatchFace {
             return formatTemperature(convertTemperature(temp_val, cachedTempUnit));
         }
         return "";
-    }
-
-    hidden function isMetricDistance() as Boolean {
-        return (System.getDeviceSettings().distanceUnits == System.UNIT_METRIC and propDistanceUnit == 0) or propDistanceUnit == 1;
     }
 
     hidden function getTempUnit() as String {
@@ -3174,24 +3207,26 @@ class Segment34View extends WatchUi.WatchFace {
         cachedBikeDist7Days = bikeDist;
     }
 
+    (:HighMem)
     hidden function getWeeklyDistanceFromComplication(isRun as Boolean, conversionFactor as Float, width as Number) as String {
-        var val = "";
         if (hasComplications) {
             try {
                 var compType = isRun ? Complications.COMPLICATION_TYPE_WEEKLY_RUN_DISTANCE : Complications.COMPLICATION_TYPE_WEEKLY_BIKE_DISTANCE;
                 var complication = Complications.getComplication(new Id(compType));
                 if (complication != null && complication.value != null) {
-                    var distance = complication.value * conversionFactor;
-                    val = formatDistanceByWidth(distance, width);
+                    return formatDistanceByWidth(complication.value * conversionFactor, width);
                 }
-            } catch(e) {
-                // Complication not found or type not supported on this device
-            }
+            } catch(e) {}
         }
-        return val;
+        return "";
+    }
+    (:LowMem)
+    hidden function getWeeklyDistanceFromComplication(isRun as Boolean, conversionFactor as Float, width as Number) as String {
+        return "";
     }
 
-    // CGM Connect Widget helper functions
+    // CGM Connect Widget helper functions — only on devices that support Complications API
+    (:HighMem)
     hidden function getCgmComplicationByLabel(targetLabel as String) as Complications.Id? {
         if (!hasComplications) { return null; }
         try {
@@ -3213,6 +3248,10 @@ class Segment34View extends WatchUi.WatchFace {
         return null;
     }
 
+    (:LowMem)
+    hidden function getCgmComplicationByLabel(targetLabel as String) as Null { return null; }
+
+    (:HighMem)
     hidden function convertCgmTrendToArrow(trend as String) as String {
         if (trend.equals("R")) { return "a"; }  // Rapidly rising ↑
         if (trend.equals("r")) { return "b"; }  // Rising ↗
@@ -3222,6 +3261,7 @@ class Segment34View extends WatchUi.WatchFace {
         return "";
     }
 
+    (:HighMem)
     hidden function getCgmReading() as String {
         if (!hasComplications) { return ""; }
         try {
@@ -3246,7 +3286,10 @@ class Segment34View extends WatchUi.WatchFace {
         } catch (e) {}
         return "";
     }
+    (:LowMem)
+    hidden function getCgmReading() as String { return ""; }
 
+    (:HighMem)
     hidden function getCgmAge() as String {
         if (!hasComplications) { return ""; }
         try {
@@ -3264,6 +3307,8 @@ class Segment34View extends WatchUi.WatchFace {
         } catch (e) {}
         return "";
     }
+    (:LowMem)
+    hidden function getCgmAge() as String { return ""; }
 
     hidden function secondaryTimezone(offset, width) as String {
         var val = "";
@@ -3288,34 +3333,40 @@ class Segment34View extends WatchUi.WatchFace {
         if(hour > 23) {
             hour -= 24;
         }
-        hour = formatHour(hour);
+        var f_hour = formatHour(hour);
         if(width < 5) {
-            val = hour.format("%02d") + min.format("%02d");
+            val = f_hour.format("%02d") + min.format("%02d");
         } else {
-            val = hour.format("%02d") + ":" + min.format("%02d");
+            if(propTimeSeparator == 3) {
+                var ampm = "A";
+                if(hour >= 12) { ampm = "P"; }
+                val = f_hour.format("%02d") + min.format("%02d") + ampm;
+            } else {
+                val = f_hour.format("%02d") + ":" + min.format("%02d");
+            }
         }
         return val;
     }
 
     hidden function dayName(day_of_week as Number) as String {
-        if(weekNames == null) { init_week_month_names(); }
-        return weekNames[day_of_week - 1];
+        if (cachedDayOfWeek == day_of_week) { return cachedDayName; }
+        cachedDayOfWeek = day_of_week;
+        var names = [Rez.Strings.DAY_OF_WEEK_SUN, Rez.Strings.DAY_OF_WEEK_MON, Rez.Strings.DAY_OF_WEEK_TUE,
+                     Rez.Strings.DAY_OF_WEEK_WED, Rez.Strings.DAY_OF_WEEK_THU, Rez.Strings.DAY_OF_WEEK_FRI,
+                     Rez.Strings.DAY_OF_WEEK_SAT];
+        cachedDayName = Application.loadResource(names[day_of_week - 1]);
+        return cachedDayName;
     }
 
     hidden function monthName(month as Number) as String {
-        if(monthNames == null) { init_week_month_names(); }
-        return monthNames[month - 1];
-    }
-
-    hidden function init_week_month_names() as Void {
-        weekNames = [Application.loadResource(Rez.Strings.DAY_OF_WEEK_SUN), Application.loadResource(Rez.Strings.DAY_OF_WEEK_MON),
-                     Application.loadResource(Rez.Strings.DAY_OF_WEEK_TUE), Application.loadResource(Rez.Strings.DAY_OF_WEEK_WED),
-                     Application.loadResource(Rez.Strings.DAY_OF_WEEK_THU), Application.loadResource(Rez.Strings.DAY_OF_WEEK_FRI),
-                     Application.loadResource(Rez.Strings.DAY_OF_WEEK_SAT)];
-        monthNames = [Application.loadResource(Rez.Strings.MONTH_JAN), Application.loadResource(Rez.Strings.MONTH_FEB), Application.loadResource(Rez.Strings.MONTH_MAR),
-                      Application.loadResource(Rez.Strings.MONTH_APR), Application.loadResource(Rez.Strings.MONTH_MAY), Application.loadResource(Rez.Strings.MONTH_JUN),
-                      Application.loadResource(Rez.Strings.MONTH_JUL), Application.loadResource(Rez.Strings.MONTH_AUG), Application.loadResource(Rez.Strings.MONTH_SEP),
-                      Application.loadResource(Rez.Strings.MONTH_OCT), Application.loadResource(Rez.Strings.MONTH_NOV), Application.loadResource(Rez.Strings.MONTH_DEC)];
+        if (cachedMonth == month) { return cachedMonthName; }
+        cachedMonth = month;
+        var names = [Rez.Strings.MONTH_JAN, Rez.Strings.MONTH_FEB, Rez.Strings.MONTH_MAR,
+                     Rez.Strings.MONTH_APR, Rez.Strings.MONTH_MAY, Rez.Strings.MONTH_JUN,
+                     Rez.Strings.MONTH_JUL, Rez.Strings.MONTH_AUG, Rez.Strings.MONTH_SEP,
+                     Rez.Strings.MONTH_OCT, Rez.Strings.MONTH_NOV, Rez.Strings.MONTH_DEC];
+        cachedMonthName = Application.loadResource(names[month - 1]);
+        return cachedMonthName;
     }
 
     hidden function isoWeekNumber(year as Number, month as Number, day as Number) as Number {
@@ -3366,7 +3417,7 @@ class Segment34View extends WatchUi.WatchFace {
     // Square helper functions - only compiled for square devices
     (:Square)
     hidden function loadBottomField2Property() as Void {
-        propBottomField2Shows = getValueOrDefault("bottomField2Shows", -2) as Number;
+        propBottomField2Shows = Application.Properties.getValue("bottomField2Shows") as Number;
     }
 
     (:Square)
@@ -3535,6 +3586,7 @@ class Segment34Delegate extends WatchUi.WatchFaceDelegate {
         return true;
     }
 
+    (:HighMem)
     function handlePress(areaSetting as String) {
         var cID = Application.Properties.getValue(areaSetting) as Complications.Type;
 
@@ -3559,6 +3611,28 @@ class Segment34Delegate extends WatchUi.WatchFaceDelegate {
             try {
                 Complications.exitTo(new Id(cID));
             } catch (e) {}
+        }
+    }
+
+    (:LowMem)
+    function handlePress(areaSetting as String) {
+        var cID = Application.Properties.getValue(areaSetting) as Number;
+
+        if(cID == -1) {
+            switch(view.nightModeOverride) {
+                case 1:
+                    view.nightModeOverride = 0;
+                    view.infoMessage = "DAY THEME";
+                    break;
+                case 0:
+                    view.nightModeOverride = -1;
+                    view.infoMessage = "THEME AUTO";
+                    break;
+                default:
+                    view.nightModeOverride = 1;
+                    view.infoMessage = "NIGHT THEME";
+            }
+            view.onSettingsChanged();
         }
     }
 
