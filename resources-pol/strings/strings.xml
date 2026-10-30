@@ -343,7 +343,8 @@
     <string id="settings_altitude_m_2" scope="settings">Wysokość (m)</string>
     <string id="settings_altitude_ft_2" scope="settings">Wysokość (ft)</string>
     <string id="settings_training_status" scope="settings">Status treningu</string>
-    <string id="settings_military_date_time" scope="settings">Wojskowa grupa daty i czasu</string>
+    <string id="settings_military_date_time" scope="settings">Wojskowa grupa daty i czasu (UTC)</string>
+    <string id="settings_military_date_time_local" scope="settings">Wojskowa grupa daty i czasu (Czas lokalny)</string>
     <string id="settings_current_location_lat_long" scope="settings">Aktualna lokalizacja (szer. dł. w stopniach dziesiętnych)</string>
     <string id="settings_current_location_military" scope="settings">Aktualna lokalizacja (Wojskowy system odniesienia siatki)</string>
     <string id="settings_current_location_accuracy" scope="settings">Dokładność aktualnej lokalizacji</string>
