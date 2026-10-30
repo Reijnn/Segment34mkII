@@ -2752,16 +2752,19 @@ class Segment34View extends WatchUi.WatchFace {
     }
 
     hidden function getDateTimeGroup() as String {
-        // 052125AMAR25
-        // DDHHMM, zone letter of the local UTC offset (J if it has none), mmmYY
-        var now = Time.now();
-        var t = Time.Gregorian.info(now, Time.FORMAT_SHORT);
+        // DDHHMM + zone letter + mmmYY, e.g. 052125AMAR25 at UTC+1
+        var t = Time.Gregorian.info(Time.now(), Time.FORMAT_SHORT);
         var off = System.getClockTime().timeZoneOffset;
         var h = off / 3600;
-        var zone = (off % 3600 == 0 && h.abs() <= 12) ? "YXWVUTSRQPONZABCDEFGHIKLM".substring(h + 12, h + 13) : "J";
-        var value = t.day.format("%02d") + t.hour.format("%02d") + t.min.format("%02d") + zone + monthName(t.month) + t.year.toString().substring(2,4);
 
-        return value;
+        // Zone letters for UTC-12..UTC+12; J means local time with no zone letter
+        var zone = "J";
+        if (off % 3600 == 0 && h.abs() <= 12) {
+            zone = "YXWVUTSRQPONZABCDEFGHIKLM".substring(h + 12, h + 13);
+        }
+
+        return t.day.format("%02d") + t.hour.format("%02d") + t.min.format("%02d")
+            + zone + monthName(t.month) + t.year.toString().substring(2, 4);
     }
 
     hidden function formatPressure(pressureHpa as Float, width as Number) as String {
