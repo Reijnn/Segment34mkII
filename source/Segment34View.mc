@@ -2354,8 +2354,8 @@ class Segment34View extends WatchUi.WatchFace {
             if(nextSunEventArray != null && nextSunEventArray.size() == 2) {
                 val = formatSunTime(nextSunEventArray[0], width);
             }
-        } else if(complicationType == 56) { // Millitary Date Time Group
-            val = getDateTimeGroup();
+        } else if(complicationType == 56 || complicationType == 79) { // Millitary Date Time Group, UTC or local
+            val = getDateTimeGroup(complicationType == 79);
         } else if(complicationType == 57) { // Time of the next Calendar Event
             val = getCalendarEventVal(width);
         } else if(complicationType == 58) { // Active / Total calories
@@ -2751,14 +2751,21 @@ class Segment34View extends WatchUi.WatchFace {
         return ret;
     }
 
-    hidden function getDateTimeGroup() as String {
-        // 052125ZMAR25
-        // DDHHMMZmmmYY
+    hidden function getDateTimeGroup(local as Boolean) as String {
+        // DDHHMM + zone letter + mmmYY, e.g. 052125ZMAR25 in UTC, 052225AMAR25 local at UTC+1
         var now = Time.now();
-        var utc = Time.Gregorian.utcInfo(now, Time.FORMAT_SHORT);
-        var value = utc.day.format("%02d") + utc.hour.format("%02d") + utc.min.format("%02d") + "Z" + monthName(utc.month) + utc.year.toString().substring(2,4);
+        var t = local ? Time.Gregorian.info(now, Time.FORMAT_SHORT) : Time.Gregorian.utcInfo(now, Time.FORMAT_SHORT);
+        var off = local ? System.getClockTime().timeZoneOffset : 0;
+        var h = off / 3600;
 
-        return value;
+        // Zone letters for UTC-12..UTC+12; J means local time with no zone letter
+        var zone = "J";
+        if (off % 3600 == 0 && h.abs() <= 12) {
+            zone = "YXWVUTSRQPONZABCDEFGHIKLM".substring(h + 12, h + 13);
+        }
+
+        return t.day.format("%02d") + t.hour.format("%02d") + t.min.format("%02d")
+            + zone + monthName(t.month) + t.year.toString().substring(2, 4);
     }
 
     hidden function formatPressure(pressureHpa as Float, width as Number) as String {

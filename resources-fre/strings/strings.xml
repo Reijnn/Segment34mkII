@@ -344,6 +344,7 @@
     <string id="settings_altitude_ft_2" scope="settings">Altitude (pi)</string>
     <string id="settings_training_status" scope="settings">Statut d'entraînement</string>
     <string id="settings_military_date_time" scope="settings">Groupe Date Heure Militaire (UTC)</string>
+    <string id="settings_military_date_time_local" scope="settings">Groupe Date Heure Militaire (Heure locale)</string>
     <string id="settings_current_location_lat_long" scope="settings">Localisation actuelle (Lat Long en degrés décimaux)</string>
     <string id="settings_current_location_military" scope="settings">Localisation actuelle (Système de référence de grille militaire)</string>
     <string id="settings_current_location_accuracy" scope="settings">Précision de localisation actuelle</string>
