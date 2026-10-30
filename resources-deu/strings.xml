@@ -202,7 +202,6 @@
     <string id="LABEL_RHR_1">RHF</string>
     <string id="LABEL_RHR_2">RUHE HF</string>
     <string id="LABEL_RHR_3">RUHE HF</string>
-    <string id="LABEL_COUNTDOWN">VERANSTALTUNG:</string>
 
     <!-- Settings strings with scope="settings" -->
     <string id="settings_color_theme" scope="settings">Farbschema</string>
@@ -430,9 +429,7 @@
     <string id="settings_alternative_timezone_2_label" scope="settings">Alt. Zeitzone 2 Beschriftung</string>
     <string id="settings_alternative_timezone_2_offset" scope="settings">Alt. Zeitzone 2 Offset</string>
     <string id="settings_countdown_name" scope="settings">Veranstaltungsname</string>
-    <string id="settings_countdown_year" scope="settings">Veranstaltungsjahr</string>
-    <string id="settings_countdown_month" scope="settings">Veranstaltungsmonat</string>
-    <string id="settings_countdown_day" scope="settings">Veranstaltungstag</string>
+    <string id="settings_countdown_date" scope="settings">Veranstaltungsdatum (DD-MM-YYYY)</string>
     <string id="settings_countdown_field_label" scope="settings">Veranstaltungs-Countdown (Tage)</string>
     <string id="settings_temperature_unit" scope="settings">Temperatureinheit</string>
     <string id="settings_c" scope="settings">C</string>
