@@ -2752,11 +2752,14 @@ class Segment34View extends WatchUi.WatchFace {
     }
 
     hidden function getDateTimeGroup() as String {
-        // 052125ZMAR25
-        // DDHHMMZmmmYY
+        // 052125AMAR25
+        // DDHHMM, zone letter of the local UTC offset (J if it has none), mmmYY
         var now = Time.now();
-        var utc = Time.Gregorian.utcInfo(now, Time.FORMAT_SHORT);
-        var value = utc.day.format("%02d") + utc.hour.format("%02d") + utc.min.format("%02d") + "Z" + monthName(utc.month) + utc.year.toString().substring(2,4);
+        var t = Time.Gregorian.info(now, Time.FORMAT_SHORT);
+        var off = System.getClockTime().timeZoneOffset;
+        var h = off / 3600;
+        var zone = (off % 3600 == 0 && h.abs() <= 12) ? "YXWVUTSRQPONZABCDEFGHIKLM".substring(h + 12, h + 13) : "J";
+        var value = t.day.format("%02d") + t.hour.format("%02d") + t.min.format("%02d") + zone + monthName(t.month) + t.year.toString().substring(2,4);
 
         return value;
     }

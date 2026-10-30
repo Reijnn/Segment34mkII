@@ -342,7 +342,7 @@
     <string id="settings_altitude_m_2" scope="settings">Höhe (m)</string>
     <string id="settings_altitude_ft_2" scope="settings">Höhe (ft)</string>
     <string id="settings_training_status" scope="settings">Trainingszustand</string>
-    <string id="settings_military_date_time" scope="settings">Militärische Datums-/Zeitgruppe (UTC)</string>
+    <string id="settings_military_date_time" scope="settings">Militärische Datums-/Zeitgruppe</string>
     <string id="settings_current_location_lat_long" scope="settings">Aktuelle Position (Lat/Long Dezimal)</string>
     <string id="settings_current_location_military" scope="settings">Aktuelle Position (MGRS)</string>
     <string id="settings_current_location_accuracy" scope="settings">Positionsgenauigkeit</string>

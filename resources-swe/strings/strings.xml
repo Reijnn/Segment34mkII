@@ -345,7 +345,7 @@
     <string id="settings_altitude_m_2" scope="settings">Altitud (m)</string>
     <string id="settings_altitude_ft_2" scope="settings">Altitud (ft)</string>
     <string id="settings_training_status" scope="settings">Träningsstatus</string>
-    <string id="settings_military_date_time" scope="settings">Militär datum tid grupp (UTC)</string>
+    <string id="settings_military_date_time" scope="settings">Militär datum tid grupp</string>
     <string id="settings_current_location_lat_long" scope="settings">Nuvarande position (lat/long i decimalgrader)</string>
     <string id="settings_current_location_military" scope="settings">Nuvarande position (militärt rutnätssystem)</string>
     <string id="settings_current_location_accuracy" scope="settings">Nuvarande position noggrannhet</string>
