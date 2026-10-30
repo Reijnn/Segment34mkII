@@ -172,6 +172,7 @@
             <listEntry value="57">@Strings.settings_next_calendar_event</listEntry>
             <listEntry value="71">@Strings.settings_cgm_glucose_trend</listEntry>
             <listEntry value="72">@Strings.settings_cgm_age</listEntry>
+            <listEntry value="81">@Strings.settings_countdown_field_label</listEntry>
         </settingConfig>
     </setting>
 
@@ -230,6 +231,7 @@
             <listEntry value="57">@Strings.settings_next_calendar_event</listEntry>
             <listEntry value="71">@Strings.settings_cgm_glucose_trend</listEntry>
             <listEntry value="72">@Strings.settings_cgm_age</listEntry>
+            <listEntry value="81">@Strings.settings_countdown_field_label</listEntry>
         </settingConfig>
     </setting>
 
@@ -459,6 +461,7 @@
             <listEntry value="57">@Strings.settings_next_calendar_event</listEntry>
             <listEntry value="71">@Strings.settings_cgm_glucose_trend</listEntry>
             <listEntry value="72">@Strings.settings_cgm_age</listEntry>
+            <listEntry value="81">@Strings.settings_countdown_field_label</listEntry>
         </settingConfig>
     </setting>
 
@@ -517,6 +520,7 @@
             <listEntry value="57">@Strings.settings_next_calendar_event</listEntry>
             <listEntry value="71">@Strings.settings_cgm_glucose_trend</listEntry>
             <listEntry value="72">@Strings.settings_cgm_age</listEntry>
+            <listEntry value="81">@Strings.settings_countdown_field_label</listEntry>
         </settingConfig>
     </setting>
 
@@ -575,6 +579,7 @@
             <listEntry value="57">@Strings.settings_next_calendar_event</listEntry>
             <listEntry value="71">@Strings.settings_cgm_glucose_trend</listEntry>
             <listEntry value="72">@Strings.settings_cgm_age</listEntry>
+            <listEntry value="81">@Strings.settings_countdown_field_label</listEntry>
         </settingConfig>
     </setting>
 
@@ -633,6 +638,7 @@
             <listEntry value="57">@Strings.settings_next_calendar_event</listEntry>
             <listEntry value="71">@Strings.settings_cgm_glucose_trend</listEntry>
             <listEntry value="72">@Strings.settings_cgm_age</listEntry>
+            <listEntry value="81">@Strings.settings_countdown_field_label</listEntry>
         </settingConfig>
     </setting>
 
@@ -662,6 +668,7 @@
             <listEntry value="62">@Strings.settings_current_location_accuracy</listEntry>
             <listEntry value="57">@Strings.settings_next_calendar_event_time</listEntry>
             <listEntry value="71">@Strings.settings_cgm_glucose_trend</listEntry>
+            <listEntry value="81">@Strings.settings_countdown_field_label</listEntry>
         </settingConfig>
     </setting>
 
@@ -691,6 +698,7 @@
             <listEntry value="62">@Strings.settings_current_location_accuracy</listEntry>
             <listEntry value="57">@Strings.settings_next_calendar_event_time</listEntry>
             <listEntry value="71">@Strings.settings_cgm_glucose_trend</listEntry>
+            <listEntry value="81">@Strings.settings_countdown_field_label</listEntry>
         </settingConfig>
     </setting>
 
@@ -1122,6 +1130,14 @@
             <listEntry value="780">UTC+13:00</listEntry>
             <listEntry value="840">UTC+14:00</listEntry>
         </settingConfig>
+    </setting>
+
+    <setting propertyKey="@Properties.countdownName" title="@Strings.settings_countdown_name">
+        <settingConfig type="alphaNumeric" />
+    </setting>
+
+    <setting propertyKey="@Properties.countdownDate" title="@Strings.settings_countdown_date">
+        <settingConfig type="alphaNumeric" />
     </setting>
 
     <setting propertyKey="@Properties.tempUnit" title="@Strings.settings_temperature_unit">

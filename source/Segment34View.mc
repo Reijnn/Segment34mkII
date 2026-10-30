@@ -152,6 +152,8 @@ class Segment34View extends WatchUi.WatchFace {
     hidden var propTzOffset2 as Number = 0;
     hidden var propTzName1 as String = "";
     hidden var propTzName2 as String = "";
+    hidden var propCountdownName as String = "EVENT:";
+    hidden var propCountdownJd as Number or Null = null; // event date as Julian day, null if invalid
     hidden var propWeekOffset as Number = 0;
     hidden var propLabelVisibility as Number = 0;
     hidden var propSmallFontVariant as Number = 0;
@@ -1427,6 +1429,18 @@ class Segment34View extends WatchUi.WatchFace {
         return false;
     }
 
+    // Parses "DD-MM-YYYY" (any separator) into a Julian day, or null if malformed or not a real date
+    hidden function parseCountdownDate(s as String) as Number or Null {
+        if(s.length() != 10) { return null; }
+        var d = s.substring(0, 2).toNumber();
+        var m = s.substring(3, 5).toNumber();
+        var y = s.substring(6, 10).toNumber();
+        if(y == null || m == null || d == null || m < 1 || m > 12 || d < 1) { return null; }
+        // Days in month = gap to the 1st of next month (julianDay treats month 13 as next January)
+        if(d > julianDay(y, m + 1, 1) - julianDay(y, m, 1)) { return null; }
+        return julianDay(y, m, d);
+    }
+
     hidden function updateProperties() as Void {
         var p = Application.Properties;
         propTheme = p.getValue("colorTheme") as Number;
@@ -1472,6 +1486,11 @@ class Segment34View extends WatchUi.WatchFace {
         propHemisphere = p.getValue("hemisphere") as Number;
         propHourFormat = p.getValue("hourFormat") as Number;
         propZeropadHour = p.getValue("zeropadHour") as Boolean;
+        var countdownName = p.getValue("countdownName");
+        // Store the finished label so drawing doesn't build a new string every frame
+        propCountdownName = ((countdownName != null) ? countdownName as String : "EVENT").toUpper() + ":";
+        var countdownDate = p.getValue("countdownDate");
+        propCountdownJd = (countdownDate != null) ? parseCountdownDate(countdownDate as String) : null;
         propIs24H = System.getDeviceSettings().is24Hour;
         propTimeSeparator = p.getValue("timeSeparator") as Number;
         // propTimeSeparator Auto (4): if 12h time use AM/PM (3), if 24h time use : (4)
@@ -2456,6 +2475,16 @@ class Segment34View extends WatchUi.WatchFace {
             }
             var distFactor = propIsMetricDistance ? 0.001 : 0.000621371;
             val = formatDistanceByWidth((complicationType == 77 ? cachedRunDist7Days : cachedBikeDist7Days) * distFactor, width);
+        } else if(complicationType == 81) { // Event Countdown (days)
+            var targetJd = propCountdownJd;
+            if(targetJd != null) {
+                // Compare calendar days in local time, so the count ticks over at local midnight
+                var t = Time.Gregorian.info(Time.now(), Time.FORMAT_SHORT);
+                var daysRemaining = targetJd - julianDay(t.year as Number, t.month as Number, t.day as Number);
+                val = (daysRemaining < 0 ? 0 : daysRemaining).format("%d");
+            } else {
+                val = "--";
+            }
         }
 
         return val;
@@ -2541,6 +2570,7 @@ class Segment34View extends WatchUi.WatchFace {
         // labelSize 1 = short, 2 = mid, 3 = long
         if(complicationType == 16) { return propTzName1.toUpper() + ":"; }
         if(complicationType == 41) { return propTzName2.toUpper() + ":"; }
+        if(complicationType == 81) { return propCountdownName; }
         switch(complicationType) {
             case 0: return formatLabel(Rez.Strings.LABEL_WMIN_1, Rez.Strings.LABEL_WMIN_2, Rez.Strings.LABEL_WMIN_3, labelSize);
             case 1: return formatLabel(Rez.Strings.LABEL_DMIN_1, Rez.Strings.LABEL_DMIN_2, Rez.Strings.LABEL_DMIN_3, labelSize);
@@ -2617,6 +2647,7 @@ class Segment34View extends WatchUi.WatchFace {
         // Low-mem version: formatLabel only takes short + mid (no long/_3 resources)
         if(complicationType == 16) { return propTzName1.toUpper() + ":"; }
         if(complicationType == 41) { return propTzName2.toUpper() + ":"; }
+        if(complicationType == 81) { return propCountdownName; }
         switch(complicationType) {
             case 0: return formatLabel(Rez.Strings.LABEL_WMIN_1, Rez.Strings.LABEL_WMIN_2, labelSize);
             case 1: return formatLabel(Rez.Strings.LABEL_DMIN_1, Rez.Strings.LABEL_DMIN_2, labelSize);
